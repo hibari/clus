@@ -1,0 +1,5 @@
+*.app
+*.beam
+*.log
+.eunit/
+erl_crash.dump

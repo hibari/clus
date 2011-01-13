@@ -1,0 +1,12 @@
+%%% -*- mode: erlang -*-
+
+{application, clus,
+ [
+  {description, "Cluster Tool"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib, sasl]},
+  {modules, [clus_builder
+            ]},
+  {env, []}
+ ]}.
