@@ -1,31 +1,48 @@
 
+Cluster is a simple tool for installing, configuring, and
+bootstrapping a cluster of nodes - primarily Hibari nodes.  The
+cluster tool requires one installer node and one or more target nodes
+for the Hibari cluster.  The installer node can be a different node or
+can be one of the target nodes.  The cluster tool requires the
+installing user (that is you) must be different than the user created
+for Hibari on the target nodes.
+
+NOTE: This tool probably won't meet the needs of all users.
+Nevertheless, this tool should meet the needs of most users.
+
+CAUTION: This tool's "target node" recipe is currently Linux-centric
+(e.g. useradd, userdel, ...).  Patches and contributions for other OS
+and platforms are welcome.
+
 
 To download
 ===========
 
 1. Get and install Repo
 
+    $ mkdir -p ~/bin
     $ curl http://android.git.kernel.org/repo > ~/bin/repo
     $ chmod a+x ~/bin/repo
 
 2. Create working directory
 
     $ mkdir working-directory-name
-    $ cd working-directory-name
-    $ repo init -u git://github.com/norton/manifests.git -m  clus-default.xml
 
-3. Download Git repositories
+3. Initialize clus working directory
 
-    $ cd working-directory-name
+    $ mkdir working-directory-name/clus
+    $ cd working-directory-name/clus
+    $ repo init -u git://github.com/norton/manifests.git -m clus-default.xml
+
+4. Download Git repositories
+
+    $ cd working-directory-name/clus
     $ repo sync
 
 
 For futher information and help for related tools, please refer to the
 following links:
 
-- Erlang - http://www.erlang.org/
-  * *R14B01 has been tested most recently*
-  * *R13B01 or newer*
 - Git - http://git-scm.com/
   * *Git 1.5.4 or newer*
   * _required for Repo and GitHub_
@@ -33,52 +50,12 @@ following links:
 - Python - http://www.python.org
   * *Python 2.4 or newer (CAUTION: Python 3.x might be too new)*
   * _required for Repo_
-- Rebar - https://github.com/basho/rebar/wiki
 - Repo - http://source.android.com/source/git-repo.html
+- SSH - http://inside.mines.edu/~gmurray/HowTo/sshNotes.html
 
+So far, there are no "known" version requirements for Bash, Perl,
+Expect, and SSH.
 
-To build - basic recipe
-=======================
-
-1. Get and install an erlang system
-   http://www.erlang.org
-
-2. Build UBF
-   $ cd working-directory-name/src
-   $ make compile
-
-3. Run the unit tests
-   $ cd working-directory-name/src
-   $ make eunit
-
-
-To build - optional features
-============================
-
-A. Dialyzer Testing _basic recipe_
-
-   A.1. Build Dialyzer's PLT _(required once)_
-
-   $ cd working-directory-name/src
-   $ make build-plt
-
-   TIP: Check Makefile and dialyzer's documentation for further
-   information.
-
-   A.2. Dialyze without specs
-
-   $ cd working-directory-name/src
-   $ make dialyze
-
-   CAUTION: If you manually run dialyzer with the "-r" option, execute
-   "make clean compile" first to avoid finding duplicate beam files
-   underneath rebar's .eunit directory.  Check Makefile for further
-   information.
-
-   A.3. Dialyze with specs
-
-   $ cd working-directory-name/src
-   $ make dialyze-spec
 
 
 To Setup a Hibari Cluster
@@ -86,26 +63,146 @@ To Setup a Hibari Cluster
 
 Assumptions:
 
-- 3 target nodes (node1, node2, node3)
-  * Your login account ($USER) exists with sudo access enabled
-  * Your login account ($USER) is accessible by ssh and password-based
-    login is not required
-  * Erlang, Git, and Python is installed
-  * `hostname -s` equals nodeX for each node respectively
-  * Network A and Network B is setup and active
+A. 1 installer node
+  * Bash, Git, Perl, Python, Expect, and SSH (client) is installed on
+    installer node
+  * Your login account ($USER) exists on installer node with ssh
+    private/public keys and ssh agent setup to enable password-less
+    ssh login
+  * /etc/hosts file on installer node contains entries for all target
+    nodes
 
-1. Create (or re-create) hibari user on target nodes
+Example /etc/hosts file entries for Network A host addresses:
+------
+10.181.165.230  dev1.your-domain.com    dev1
+10.181.165.231  dev2.your-domain.com    dev2
+10.181.165.232  dev3.your-domain.com    dev3
+------
+
+B. 1 or more cluster target nodes (e.g. dev1, dev2, dev3)
+  * Your login account ($USER) exists on target nodes
+  * Your login account ($USER) is enabled with password-less sudo
+    access on target nodes
+  * Your login account ($USER) is accessible with password-less ssh
+    login on target nodes
+
+  * Erlang and SSH (server) is installed on target nodes
+  * `hostname -s` equals nodeX for each target node respectively and
+    /etc/hosts file on target nodes contains entries for all target
+    nodes
+  * Network A and Network B is setup and active (see note below)
+  * The base home directory for the node user exists
+    (e.g. "/usr/local/var/lib")
+
+    NOTE: The base home directory can be changed by enviroment
+    variable.  See src/lib/clus/priv/clus.sh for details.
+
+C. Cluster configuration file
+  * Erlang base directory
+  * Hibari Admin nodes
+  * Hibari Brick nodes
+  * Hibari Bricks per Chain value (i.e. replication factor)
+  * All Hibari nodes (union of Admin and Brick nodes)
+  * All Hibari nodes Network A and Network B ip addresses plus Network
+    broadcast addresses and Network A tiebreaker address
+  * All Heartbeat UDP ports
+
+Example configuration file (e.g. hibari.config) for a three node
+cluster that uses the same physical network for Network A and Network
+B:
+------
+ERLANG_DIR=/usr/local/lib/erlang
+
+ADMIN_NODES=(dev1 dev2 dev3)
+BRICK_NODES=(dev1 dev2 dev3)
+BRICKS_PER_CHAIN=2
+
+ALL_NODES=(dev1 dev2 dev3)
+ALL_NETA_ADDRS=("10.181.165.230" "10.181.165.231" "10.181.165.232")
+ALL_NETB_ADDRS=("10.181.165.230" "10.181.165.231" "10.181.165.232")
+ALL_NETA_BCAST="10.181.165.255"
+ALL_NETB_BCAST="10.181.165.255"
+ALL_NETA_TIEBREAKER="10.181.165.1"
+
+ALL_HEART_UDP_PORT="63099"
+ALL_HEART_XMIT_UDP_PORT="63100"
+------
+
+    NOTE: See here
+    http://hibari.github.com/hibari-doc/hibari-sysadmin-guide.en.html#partition-detector
+    for further information regarding the network partition detector
+    application.  Additional information for the application's
+    configuration is embedded in the partition-detector's OTP
+    application source file
+    (https://github.com/hibari/partition-detector/raw/master/src/partition_detector.app.src).
+
+    NOTE: In a production setting, Network A and Network B should be
+    physically different networks and network interfaces.  However,
+    the same network can be used (as in this example) for Network A
+    and Network B for testing and development purposes.
+
+
+Instructions:
+
+1. Setup the installer user (i.e. your login - $USER) on all Hibari
+   nodes if not already existing
+
+  $ ssh root@devN
+  $ useradd $USER
+  $ passwd $USER
+  $ vi /etc/sudoers
+     # append the following line and save it
+     $USER  ALL=(ALL)       NOPASSWD: ALL
+  $ exit
+
+  $ ssh-copy-id $USER@devN
+  $ ssh $USER@devN hostname
+
+
+2. Create (or re-create) hibari user on All Hibari nodes
    $ cd working-directory-name
-   $ for i in node1 node2 node3 ; do ./src/lib/clus/priv/clus.sh -f init hibari $i ; done
-hibari@node1
-hibari@node2
-hibari@node3
+   $ for i in dev1 dev2 dev3 ; do ./clus/src/lib/clus/priv/clus.sh -f init hibari $i ; done
+hibari@dev1
+hibari@dev2
+hibari@dev3
 
    CAUTION: The -f option will forcefully delete and then re-create
    the hibari user on the target node.
 
-2. Download, Build, and Setup hibari package on target nodes
+
+3. Download to installer node. Next, Build and Setup hibari package on
+   All Hibari nodes
    $ cd working-directory-name
-   $ ./src/lib/clus/priv/clus-hibari.sh -f init /usr/local/lib/erlang hibari node1 node2 node3
+   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f init hibari hibari.config
+hibari@dev1
+hibari@dev2
+hibari@dev3
 
 
+4. Start hibari package on All Hibari nodes
+   $ cd working-directory-name
+   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f start hibari hibari.config
+hibari@dev1
+hibari@dev2
+hibari@dev3
+
+
+5. Bootstrap hibari package on first Hibari Admin node
+   $ cd working-directory-name
+   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f bootstrap hibari hibari.config
+hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
+
+
+6. Open "Hibari Web Administration" Page
+   $ your-favorite-browser http://dev1:23080
+
+
+7. Stop hibari package on All Hibari nodes
+   $ cd working-directory-name
+   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f stop hibari hibari.config
+ok
+ok
+ok
+hibari@dev1
+hibari@dev2
+hibari@dev3
