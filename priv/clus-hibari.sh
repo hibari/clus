@@ -228,7 +228,7 @@ init() {
                 die "node $NODE setup .bashrc failed"
 
             # stop Hibari
-            $SSH $NODE_USER@$NODE "(cd hibari/hibari &> $NULLFILE; ./tmp/hibari/bin/hibari stop &> $NULLFILE) || true" || \
+            $SSH $NODE_USER@$NODE "(source .bashrc; cd hibari/hibari &> $NULLFILE; ./tmp/hibari/bin/hibari stop &> $NULLFILE) || true" || \
                 die "node $NODE stop failed"
             # kill all Hibari beam.smp processes
             $SSH $NODE_USER@$NODE "pkill -9 -u $NODE_USER beam.smp || true" || \
@@ -239,7 +239,7 @@ init() {
                 die "node $NODE rsync failed"
 
             # make Hibari package
-            $SSH $NODE_USER@$NODE "make -C hibari/hibari package &> $NULLFILE" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; make -C hibari/hibari package &> $NULLFILE" || \
                 die "node $NODE make failed"
             # untar Hibari package
             $SSH $NODE_USER@$NODE "rm -rf hibari/hibari/tmp; mkdir hibari/hibari/tmp; tar -C hibari/hibari/tmp -xzf hibari/*.tgz" || \
@@ -294,7 +294,7 @@ start() {
             local NODE=${ALL_NODES[$I]}
 
             # start Hibari package
-            $SSH $NODE_USER@$NODE "cd hibari/hibari; ./tmp/hibari/bin/hibari start" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari/hibari; ./tmp/hibari/bin/hibari start" || \
                 die "node $NODE start failed"
 
             echo $NODE_USER@$NODE
@@ -313,7 +313,7 @@ bootstrap() {
     local WS_BRICK_NODES=`hibari_nodes_ws ${BRICK_NODES[@]}`
 
     # bootstrap Hibari package
-    $SSH $NODE_USER@$NODE "cd hibari/hibari; ./tmp/hibari/bin/hibari-admin bootstrap $BRICKS_PER_CHAIN $WS_BRICK_NODES" || \
+    $SSH $NODE_USER@$NODE "source .bashrc; cd hibari/hibari; ./tmp/hibari/bin/hibari-admin bootstrap $BRICKS_PER_CHAIN $WS_BRICK_NODES" || \
         die "node $NODE bootstrap failed"
 
     echo "$NODE_USER@$NODE => $WS_BRICK_NODES"
@@ -333,7 +333,7 @@ stop() {
             local NODE=${ALL_NODES[$I]}
 
             # stop Hibari package
-            $SSH $NODE_USER@$NODE "cd hibari/hibari; ./tmp/hibari/bin/hibari stop" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari/hibari; ./tmp/hibari/bin/hibari stop" || \
                 die "node $NODE stop failed"
 
             echo $NODE_USER@$NODE
