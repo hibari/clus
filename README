@@ -18,23 +18,27 @@ and platforms are welcome.
 To download
 ===========
 
-1. Get and install Repo
+1. Configure your e-mail and name for Git
+    $ git config --global user.email "you@example.com"
+    $ git config --global user.name "Your Name"
+
+2. Get and install Repo
 
     $ mkdir -p ~/bin
     $ curl http://android.git.kernel.org/repo > ~/bin/repo
     $ chmod a+x ~/bin/repo
 
-2. Create working directory
+3. Create working directory
 
     $ mkdir working-directory-name
 
-3. Initialize clus working directory
+4. Initialize clus working directory
 
     $ mkdir working-directory-name/clus
     $ cd working-directory-name/clus
     $ repo init -u git://github.com/norton/manifests.git -m clus-default.xml
 
-4. Download Git repositories
+5. Download Git repositories
 
     $ cd working-directory-name/clus
     $ repo sync
@@ -144,22 +148,50 @@ ALL_HEART_XMIT_UDP_PORT="63100"
 
 Instructions:
 
-1. Setup the installer user (i.e. your login - $USER) on all Hibari
-   nodes if not already existing
+1. Setup your user (i.e. your login - $USER) on all Hibari nodes if
+   not already existing.  This user will be used for Hibari
+   installation purposes.
 
-  $ ssh root@devN
-  $ useradd $USER
-  $ passwd $USER
-  $ vi /etc/sudoers
-     # append the following line and save it
-     $USER  ALL=(ALL)       NOPASSWD: ALL
-  $ exit
+    a. As root user, add your user to all of the Hibari nodes and
+       grant sudo access for your user.
 
-  $ ssh-copy-id $USER@devN
-  $ ssh $USER@devN hostname
+       ------
+       $ useradd $USER
+       $ passwd $USER
+       $ vi /etc/sudoers
+         # append the following line and save it
+         $USER  ALL=(ALL)       NOPASSWD: ALL
+       ------
+
+    b. create a new ssh private/public key for your user on the first
+       node (or one of the nodes of your choosing) of all the Hibari
+       nodes.
+
+       ------
+       $ ssh-keygen
+         # enter your password for the private key
+       $ eval `ssh-agent`
+       $ ssh-add ~/.ssh/id_rsa
+         # re-enter your password for the private key
+       ------
+
+    c. append an entry for the first node to your ~/.ssh/known_hosts
+       file on each of the Hibari nodes and append an entry to your
+       ~/.ssh/authorized_keys file on all of the Hibari nodes for your
+       public ssh key (on the first node).
+
+       ------
+       $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@devN
+       $ ssh $USER@devN hostname
+       ------
 
 
 2. Create (or re-create) hibari user on All Hibari nodes
+
+   NOTE: If your ssh private key is protected by a password, please
+   make sure your private key is registered with the ssh agent before
+   proceeding.
+
    $ cd working-directory-name
    $ for i in dev1 dev2 dev3 ; do ./clus/src/lib/clus/priv/clus.sh -f init hibari $i ; done
 hibari@dev1
@@ -191,6 +223,12 @@ hibari@dev3
    $ cd working-directory-name
    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f bootstrap hibari hibari.config
 hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
+
+   NOTE: If bootstrapping fails due to "another_admin_server_running"
+   error, please stop the other Hibari cluster(s) running on the
+   network or repeat this process from step 2 with udp ports
+   (i.e. ALL_HEART_UDP_PORT and ALL_HEART_XMIT_UDP_PORT) that are not
+   in use by other applications or another Hibari cluster.
 
 
 6. Open "Hibari Web Administration" Page
