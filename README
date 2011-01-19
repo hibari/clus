@@ -3,8 +3,8 @@ Cluster is a simple tool for installing, configuring, and
 bootstrapping a cluster of nodes - primarily Hibari nodes.  The
 cluster tool requires one installer node and one or more target nodes
 for the Hibari cluster.  The installer node can be a different node or
-can be one of the target nodes.  The cluster tool requires the
-installing user (that is you) must be different than the user created
+can be one of the target nodes.  The cluster tool requires an
+installing user (that is you) and it must be different than the user
 for Hibari on the target nodes.
 
 NOTE: This tool probably won't meet the needs of all users.
@@ -14,52 +14,27 @@ CAUTION: This tool's "target node" recipe is currently Linux-centric
 (e.g. useradd, userdel, ...).  Patches and contributions for other OS
 and platforms are welcome.
 
-
-To download
-===========
-
-1. Configure your e-mail and name for Git
-    $ git config --global user.email "you@example.com"
-    $ git config --global user.name "Your Name"
-
-2. Get and install Repo
-
-    $ mkdir -p ~/bin
-    $ curl http://android.git.kernel.org/repo > ~/bin/repo
-    $ chmod a+x ~/bin/repo
-
-3. Create working directory
-
-    $ mkdir working-directory-name
-
-4. Initialize clus working directory
-
-    $ mkdir working-directory-name/clus
-    $ cd working-directory-name/clus
-    $ repo init -u git://github.com/norton/manifests.git -m clus-default.xml
-
-5. Download Git repositories
-
-    $ cd working-directory-name/clus
-    $ repo sync
-
-
-For futher information and help for related tools, please refer to the
-following links:
+Your Hibari cluster nodes must have following tools/environments
+ready.  For further information and help for related tools, please
+refer to the following links:
 
 - Git - http://git-scm.com/
   * *Git 1.5.4 or newer*
   * _required for Repo and GitHub_
 - GitHub - https://github.com
+- Erlang - http://www.erlang.org/
+  * *R13B04 or newer*
+  * *R14B01 has been tested most recently*
 - Python - http://www.python.org
   * *Python 2.4 or newer (CAUTION: Python 3.x might be too new)*
   * _required for Repo_
 - Repo - http://source.android.com/source/git-repo.html
 - SSH - http://inside.mines.edu/~gmurray/HowTo/sshNotes.html
+- Expect - http://www.nist.gov/el/msid/expect.cfm
+  * _required only for installer node_
 
 So far, there are no "known" version requirements for Bash, Perl,
 Expect, and SSH.
-
 
 
 To Setup a Hibari Cluster
@@ -98,10 +73,10 @@ B. 1 or more cluster target nodes (e.g. dev1, dev2, dev3)
   * The base home directory for the node user exists
     (e.g. "/usr/local/var/lib")
 
-    NOTE: The base home directory can be changed by enviroment
+    NOTE: The base home directory can be changed by environment
     variable.  See src/lib/clus/priv/clus.sh for details.
 
-C. Cluster configuration file
+C. Cluster configuration file (e.g. hibari.config)
   * Erlang base directory
   * Hibari Admin nodes
   * Hibari Brick nodes
@@ -113,7 +88,8 @@ C. Cluster configuration file
 
 Example configuration file (e.g. hibari.config) for a three node
 cluster that uses the same physical network for Network A and Network
-B:
+B.  Please prepare a similar file on your installer node:
+
 ------
 ERLANG_DIR=/usr/local/lib/erlang
 
@@ -148,6 +124,9 @@ ALL_HEART_XMIT_UDP_PORT="63100"
 
 Instructions:
 
+Example how to prepare installing user
+======================================
+
 1. Setup your user (i.e. your login - $USER) on all Hibari nodes if
    not already existing.  This user will be used for Hibari
    installation purposes.
@@ -163,7 +142,16 @@ Instructions:
          $USER  ALL=(ALL)       NOPASSWD: ALL
        ------
 
-    b. create a new ssh private/public key for your user on the first
+       NOTE: If you get "sudo: sorry, you must have a tty to run sudo"
+       error while testing 'sudo', consider to comment out following
+       line inside of the /etc/sudoers file:
+
+       ------
+       $ vi /etc/sudoers
+         Defaults    requiretty
+       ------
+
+    b. Create a new ssh private/public key for your user on the first
        node (or one of the nodes of your choosing) of all the Hibari
        nodes.
 
@@ -175,7 +163,7 @@ Instructions:
          # re-enter your password for the private key
        ------
 
-    c. append an entry for the first node to your ~/.ssh/known_hosts
+    c. Append an entry for the first node to your ~/.ssh/known_hosts
        file on each of the Hibari nodes and append an entry to your
        ~/.ssh/authorized_keys file on all of the Hibari nodes for your
        public ssh key (on the first node).
@@ -185,8 +173,44 @@ Instructions:
        $ ssh $USER@devN hostname
        ------
 
+       NOTE: if your installer node will be the one of Hibari cluster
+       nodes, make sure ssh-copy-id to installer node also.
 
-2. Create (or re-create) hibari user on All Hibari nodes
+
+Example how to prepare installer node
+=====================================
+
+1. Configure your e-mail and name for Git
+
+    $ git config --global user.email "you@example.com"
+    $ git config --global user.name "Your Name"
+
+2. Get and install Repo
+
+    $ mkdir -p ~/bin
+    $ curl http://android.git.kernel.org/repo > ~/bin/repo
+    $ chmod a+x ~/bin/repo
+
+3. Create working directory
+
+    $ mkdir working-directory-name
+
+4. Initialize clus working directory
+
+    $ mkdir working-directory-name/clus
+    $ cd working-directory-name/clus
+    $ ~/bin/repo init -u git://github.com/norton/manifests.git -m clus-default.xml
+
+5. Download Git repositories
+
+    $ cd working-directory-name/clus
+    $ ~/bin/repo sync
+
+
+Example how to create All Hibari nodes
+======================================
+
+1. Create (or re-create) hibari user on All Hibari nodes
 
    NOTE: If your ssh private key is protected by a password, please
    make sure your private key is registered with the ssh agent before
@@ -202,7 +226,7 @@ hibari@dev3
    the hibari user on the target node.
 
 
-3. Download to installer node. Next, Build and Setup hibari package on
+2. Download to installer node. Next, Build and Setup hibari package on
    All Hibari nodes
    $ cd working-directory-name
    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f init hibari hibari.config
@@ -211,7 +235,7 @@ hibari@dev2
 hibari@dev3
 
 
-4. Start hibari package on All Hibari nodes
+3. Start hibari package on All Hibari nodes
    $ cd working-directory-name
    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f start hibari hibari.config
 hibari@dev1
@@ -219,23 +243,23 @@ hibari@dev2
 hibari@dev3
 
 
-5. Bootstrap hibari package on first Hibari Admin node
+4. Bootstrap hibari package on first Hibari Admin node
    $ cd working-directory-name
    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f bootstrap hibari hibari.config
 hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
 
    NOTE: If bootstrapping fails due to "another_admin_server_running"
    error, please stop the other Hibari cluster(s) running on the
-   network or repeat this process from step 2 with udp ports
+   network or repeat this process from step 1. with udp ports
    (i.e. ALL_HEART_UDP_PORT and ALL_HEART_XMIT_UDP_PORT) that are not
    in use by other applications or another Hibari cluster.
 
 
-6. Open "Hibari Web Administration" Page
+5. Open "Hibari Web Administration" Page
    $ your-favorite-browser http://dev1:23080
 
 
-7. Stop hibari package on All Hibari nodes
+6. Stop hibari package on All Hibari nodes
    $ cd working-directory-name
    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f stop hibari hibari.config
 ok
