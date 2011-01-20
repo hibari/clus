@@ -178,6 +178,8 @@ init() {
     # add new group and user
     $SSH $NODE_HOST "$SUDO $GROUPADD -r $NODE_USER" || \
         die "remote group '$NODE_USER@$NODE_HOST' add failed"
+    $SSH $NODE_HOST "$SUDO mkdir -p $HOMEBASEDIR" || \
+        die "remote group '$NODE_USER@$NODE_HOST' mkdir failed"
     $SSH $NODE_HOST "$SUDO $USERADD -m -r -g $NODE_USER -d $HOMEBASEDIR/$NODE_USER -c '$NODE_USER node' $NODE_USER" || \
         die "remote user '$NODE_USER@$NODE_HOST' add failed"
 
