@@ -126,10 +126,10 @@ Example /etc/hosts file entries for above configuration:
     the same network can be used (as in this example) for Network A
     and Network B for testing and development purposes.
 
-    CAUTION: Currently hostname must not contain "-" (minus).
-    If hostname contain "-", like dev-1 for example, Hibari Cluster will
-    not startup. This will be fixed in future release and this sentence
-    will be deleted at that time. Thanks for your patience.
+    CAUTION: Currently hostname must not contain "-" (minus).  If
+    hostname contain "-", like dev-1 for example, Hibari Cluster will
+    not startup. This will be fixed in future release and this
+    sentence will be deleted at that time. Thanks for your patience.
 
 
 Instructions:
@@ -302,6 +302,7 @@ scripts (i.e. clus.sh and clus-hibari.sh).
 
        Enable color display in this user account (y/n)? y
        ------
+
 
 3. Start Hibari package on All Hibari nodes for user "hibari".
 
