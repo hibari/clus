@@ -126,6 +126,10 @@ Example /etc/hosts file entries for above configuration:
     the same network can be used (as in this example) for Network A
     and Network B for testing and development purposes.
 
+    CAUTION: Currently hostname must not contain "-" (minus).
+    If hostname contain "-", like dev-1 for example, Hibari Cluster will
+    not startup. This will be fixed in future release and this sentence
+    will be deleted at that time. Thanks for your patience.
 
 
 Instructions:
@@ -186,9 +190,9 @@ Example how to prepare installing user
        works as expected.
 
        ------
-       $ ssh $USER@dev1 hostname
-       $ ssh $USER@dev2 hostname
-       $ ssh $USER@dev3 hostname
+       $ ssh $USER@dev1
+       $ ssh $USER@dev2
+       $ ssh $USER@dev3
        ------
 
 
@@ -203,29 +207,51 @@ Example how to prepare installer node
 
 1. Configure your e-mail and name for Git
 
+    ------
     $ git config --global user.email "you@example.com"
     $ git config --global user.name "Your Name"
+    ------
 
 2. Get and install Repo
 
+    ------
     $ mkdir -p ~/bin
     $ curl http://android.git.kernel.org/repo > ~/bin/repo
     $ chmod a+x ~/bin/repo
+    ------
 
 3. Create working directory
 
+    ------
     $ mkdir working-directory-name
+    ------
 
 4. Initialize clus working directory
 
+    ------
     $ mkdir working-directory-name/clus
     $ cd working-directory-name/clus
     $ ~/bin/repo init -u git://github.com/norton/manifests.git -m clus-default.xml
+    ------
+
+    NOTE: When you are asked like following, just enter as it is.
+       ------
+       Your Name  [Your Name]:
+
+       Your Email [you@example.com]:
+
+       Your identity is: Your Name <you@example.com>
+       is this correct [y/n]? y
+
+       Enable color display in this user account (y/n)? y
+       ------
 
 5. Download Git repositories
 
+    ------
     $ cd working-directory-name/clus
     $ ~/bin/repo sync
+    ------
 
 
 
@@ -237,69 +263,92 @@ scripts (i.e. clus.sh and clus-hibari.sh).
 
 1. Create (or re-create) "hibari" user on All Hibari nodes
 
-   NOTE: If your ssh private key is protected by a password, please
-   make sure your private key is registered with the ssh agent before
-   proceeding.
+    NOTE: If your ssh private key is protected by a password, please
+    make sure your private key is registered with the ssh agent before
+    proceeding.
 
-   $ cd working-directory-name
-   $ for i in dev1 dev2 dev3 ; do ./clus/src/lib/clus/priv/clus.sh -f init hibari $i ; done
-hibari@dev1
-hibari@dev2
-hibari@dev3
+    ------
+    $ cd working-directory-name
+    $ for i in dev1 dev2 dev3 ; do ./clus/src/lib/clus/priv/clus.sh -f init hibari $i ; done
+    hibari@dev1
+    hibari@dev2
+    hibari@dev3
+    ------
 
-   CAUTION: The -f option will forcefully delete and then re-create
-   the "hibari" user on the target node.
+    CAUTION: The -f option will forcefully delete and then re-create
+    the "hibari" user on the target node.
 
 
 2. Download Hibari source files from GitHub, transfer source files to
    all Hibari nodes, and then Build and Setup Hibari package on All
    Hibari nodes for user "hibari".
 
-   $ cd working-directory-name
-   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f init hibari hibari.config
-hibari@dev1
-hibari@dev2
-hibari@dev3
+    ------
+    $ cd working-directory-name
+    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f init hibari hibari.config
+    hibari@dev1
+    hibari@dev2
+    hibari@dev3
+    ------
 
+    NOTE: When you are asked like following, just enter as it is.
+       ------
+       Your Name  [Your Name]:
+
+       Your Email [you@example.com]:
+
+       Your identity is: Your Name <you@example.com>
+       is this correct [y/n]? y
+
+       Enable color display in this user account (y/n)? y
+       ------
 
 3. Start Hibari package on All Hibari nodes for user "hibari".
 
-   $ cd working-directory-name
-   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f start hibari hibari.config
-hibari@dev1
-hibari@dev2
-hibari@dev3
+    ------
+    $ cd working-directory-name
+    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f start hibari hibari.config
+    hibari@dev1
+    hibari@dev2
+    hibari@dev3
+    ------
 
 
 4. Bootstrap Hibari package on first Hibari Admin node with user
 "hibari"
 
-   $ cd working-directory-name
-   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f bootstrap hibari hibari.config
-hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
+    ------
+    $ cd working-directory-name
+    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f bootstrap hibari hibari.config
+    hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
+    ------
 
-   NOTE: If bootstrapping fails due to "another_admin_server_running"
-   error, please stop the other Hibari cluster(s) running on the
-   network or repeat this process from step 1. with udp ports
-   (i.e. ALL_HEART_UDP_PORT and ALL_HEART_XMIT_UDP_PORT) that are not
-   in use by other applications or another Hibari cluster.
+    NOTE: If bootstrapping fails due to "another_admin_server_running"
+    error, please stop the other Hibari cluster(s) running on the
+    network or repeat this process from step 1. with udp ports
+    (i.e. ALL_HEART_UDP_PORT and ALL_HEART_XMIT_UDP_PORT) that are not
+    in use by other applications or another Hibari cluster.
 
 
 5. Open "Hibari Web Administration" Page
 
-   $ your-favorite-browser http://dev1:23080
+    ------
+    $ your-favorite-browser http://dev1:23080
+    ------
 
 
 6. Stop Hibari package on All Hibari nodes for user "hibari".
 
-   $ cd working-directory-name
-   $ ./clus/src/lib/clus/priv/clus-hibari.sh -f stop hibari hibari.config
-ok
-ok
-ok
-hibari@dev1
-hibari@dev2
-hibari@dev3
+    ------
+    $ cd working-directory-name
+    $ ./clus/src/lib/clus/priv/clus-hibari.sh -f stop hibari hibari.config
+    ok
+    ok
+    ok
+    hibari@dev1
+    hibari@dev2
+    hibari@dev3
+    ------
 
 
 TIP: The clus-hibari.sh script can be used even after creation of the
