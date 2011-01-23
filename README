@@ -216,7 +216,7 @@ Example how to prepare installer node
 
     ------
     $ mkdir -p ~/bin
-    $ curl http://android.git.kernel.org/repo > ~/bin/repo
+    $ wget -O - http://android.git.kernel.org/repo > ~/bin/repo
     $ chmod a+x ~/bin/repo
     ------
 
