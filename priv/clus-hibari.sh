@@ -5,6 +5,7 @@ set -e
 # aliases
 PERL=${CT_PERL:-"perl"}
 SSH=${CT_SSH:-"ssh -ttqx -o PasswordAuthentication=no"}
+SCP=${CT_SSH:-"scp -q -o PasswordAuthentication=no"}
 
 # files
 NULLFILE=${CT_NULLFILE:-"/dev/null"}
@@ -63,7 +64,7 @@ usage() {
 Usage: $0 [-f] <command> ...
 
   <command> is one of the following:
-    init <user> <hibari.cfg>
+    init <user> <hibari.cfg> <hibari-X.Y.Z-DIST-ARCH-WORDSIZE>.tgz
     start <user> <hibari.cfg>
     bootstrap <user> <hibari.cfg>
     stop <user> <hibari.cfg>
@@ -76,7 +77,7 @@ Usage: $0 [-f] <command> ...
 
 
 Example usage:
-  $0 init hibari hibari.cfg
+  $0 init hibari hibari.cfg hibari-X.Y.Z-DIST-ARCH-WORDSIZE.tgz
 
 Notes:
   - <user> and hosts in the cluster config file must be simple names
@@ -93,8 +94,9 @@ EOF
 env_sanity() {
     local PERL=($PERL)
     local SSH=($SSH)
+    local SCP=($SCP)
 
-    for i in ${PERL[0]} ${SSH[0]} ; do
+    for i in ${PERL[0]} ${SSH[0]} ${SCP[0]} ; do
         `test -f $i &> $NULLFILE` || `which $i &> $NULLFILE` ||
         die "$i does not exist or not found in ($PATH)"
     done
@@ -118,6 +120,7 @@ args_sanity() {
     CMD=$1
     NODE_USER=$2
     CONFIG_FILE=$3
+    TARBALL=$4
 
     echo $NODE_USER | $PERL -lne 'exit 1 if /[^a-zA-Z0-9._-]/' || \
         die "user '$NODE_USER' invalid"
@@ -194,13 +197,9 @@ args_sanity() {
 # init
 # ----------------------------------------------------------------------
 init() {
-    # download Hibari
-    if [ ! -d  hibari ] ; then
-        mkdir hibari
-        pushd hibari
-        repo init -u git://github.com/hibari/manifests.git -m hibari-default.xml
-        repo sync
-        popd
+    # check for Hibari tarball
+    if [[ -z $TARBALL || ! -f $TARBALL ]] ; then
+        die "missing tarball"
     fi
 
     local N0=${#ALL_NODES[@]}
@@ -223,34 +222,27 @@ init() {
             local CS_ADMIN_NODES=(`hibari_nodes_cs ${ADMIN_NODES[@]}`)
             local CS_ADMIN_NODES_MINUSMOI=(`hibari_nodes_cs ${ADMIN_NODES_MINUSMOI[@]}`)
 
-            # append Erlang Dir to path
-            $SSH $NODE_USER@$NODE "sed -i.bak '\$a\export PATH=$ERLANG_DIR/bin:\$PATH' .bashrc" || \
-                die "node $NODE setup .bashrc failed"
-
             # stop Hibari
-            $SSH $NODE_USER@$NODE "(source .bashrc; cd hibari/hibari &> $NULLFILE; ./tmp/hibari/bin/hibari stop &> $NULLFILE) || true" || \
+            $SSH $NODE_USER@$NODE "(source .bashrc; cd hibari &> $NULLFILE; ./bin/hibari stop &> $NULLFILE) || true" || \
                 die "node $NODE stop failed"
             # kill all Hibari beam.smp processes
             $SSH $NODE_USER@$NODE "pkill -9 -u $NODE_USER beam.smp || true" || \
                 die "node $NODE pkill beam.smp failed"
 
-            # rsync Hibari
-            rsync -a hibari/ $NODE_USER@$NODE:hibari/ || \
-                die "node $NODE rsync failed"
+            # scp Hibari tarball
+            $SCP $TARBALL $NODE_USER@$NODE:$TARBALL || \
+                die "node $NODE scp tarball failed"
 
-            # make Hibari package
-            $SSH $NODE_USER@$NODE "source .bashrc; make -C hibari/hibari package &> $NULLFILE" || \
-                die "node $NODE make failed"
             # untar Hibari package
-            $SSH $NODE_USER@$NODE "rm -rf hibari/hibari/tmp; mkdir hibari/hibari/tmp; tar -C hibari/hibari/tmp -xzf hibari/*.tgz" || \
-                die "node $NODE untar failed"
+            $SSH $NODE_USER@$NODE "rm -rf hibari; tar -xzf $TARBALL" || \
+                die "node $NODE untar tarball failed"
 
             # configure Hibari package
             $SSH $NODE_USER@$NODE "sed -i.bak \
 -e 's/-sname .*/-sname $CS_NODE/' \
 -e 's/-name .*/-sname $CS_NODE/' \
 -e 's/-setcookie .*/-setcookie $COOKIE/' \
-hibari/hibari/tmp/hibari/etc/vm.args" || \
+hibari/etc/vm.args" || \
                 die "node $NODE vm.args setup failed"
 
             $SSH $NODE_USER@$NODE "sed -i.bak \
@@ -266,7 +258,7 @@ hibari/hibari/tmp/hibari/etc/vm.args" || \
 -e 's/{network_monitor_monitored_nodes,.*}/{network_monitor_monitored_nodes, [$CS_ALL_NODES]}/' \
 -e 's/{heartbeat_status_udp_port,.*}/{heartbeat_status_udp_port, $ALL_HEART_UDP_PORT}/' \
 -e 's/{heartbeat_status_xmit_udp_port,.*}/{heartbeat_status_xmit_udp_port, $ALL_HEART_XMIT_UDP_PORT}/' \
-hibari/hibari/tmp/hibari/etc/app.config" || \
+hibari/etc/app.config" || \
                 die "node $NODE app.config setup failed"
 
             echo $NODE_USER@$NODE
@@ -294,7 +286,7 @@ start() {
             local NODE=${ALL_NODES[$I]}
 
             # start Hibari package
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari/hibari; ./tmp/hibari/bin/hibari start" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari; ./bin/hibari start" || \
                 die "node $NODE start failed"
 
             echo $NODE_USER@$NODE
@@ -313,7 +305,7 @@ bootstrap() {
     local WS_BRICK_NODES=`hibari_nodes_ws ${BRICK_NODES[@]}`
 
     # bootstrap Hibari package
-    $SSH $NODE_USER@$NODE "source .bashrc; cd hibari/hibari; ./tmp/hibari/bin/hibari-admin bootstrap $BRICKS_PER_CHAIN $WS_BRICK_NODES" || \
+    $SSH $NODE_USER@$NODE "source .bashrc; cd hibari; ./bin/hibari-admin bootstrap $BRICKS_PER_CHAIN $WS_BRICK_NODES" || \
         die "node $NODE bootstrap failed"
 
     echo "$NODE_USER@$NODE => $WS_BRICK_NODES"
@@ -333,7 +325,7 @@ stop() {
             local NODE=${ALL_NODES[$I]}
 
             # stop Hibari package
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari/hibari; ./tmp/hibari/bin/hibari stop" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari; ./bin/hibari stop" || \
                 die "node $NODE stop failed"
 
             echo $NODE_USER@$NODE
