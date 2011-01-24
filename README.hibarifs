@@ -264,10 +264,19 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
 
 5. Open "HibariFS Web Administration" page and manually confirm each
    of the HibariFS nodes is registered via the "Add/Delete a client
-   node monitor." link.
+   node monitor." link.  Next, ping each of the nodes to check the
+   health.
 
     ------
     $ your-favorite-browser http://dev1:23080
+    ------
+
+    ------
+    $ cd working-directory-name
+    $ ./clus/priv/clus-hibarifs.sh -f ping hibarifs hibarifs.config
+    hibarifs@dev1 ... pong
+    hibarifs@dev2 ... pong
+    hibarifs@dev3 ... pong
     ------
 
 

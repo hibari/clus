@@ -38,6 +38,8 @@ main() {
         start
     elif [ "$CMD" = "bootstrap" ] ; then
         bootstrap
+    elif [ "$CMD" = "ping" ] ; then
+        ping
     elif [ "$CMD" = "stop" ] ; then
         stop
     else
@@ -67,6 +69,7 @@ Usage: $0 [-f] <command> ...
     init <user> <hibari.cfg> <hibari-X.Y.Z-DIST-ARCH-WORDSIZE>.tgz
     start <user> <hibari.cfg>
     bootstrap <user> <hibari.cfg>
+    ping <user> <hibari.cfg>
     stop <user> <hibari.cfg>
 
   - "-f" is enable force mode.  disable safety checks to prevent
@@ -312,6 +315,27 @@ bootstrap() {
         die "node $NODE bootstrap failed"
 
     echo "$NODE_USER@$NODE => $WS_BRICK_NODES"
+}
+
+
+# ----------------------------------------------------------------------
+# ping
+# ----------------------------------------------------------------------
+ping() {
+    local N0=${#ALL_NODES[@]}
+    local N=$(($N0 - 1))
+
+    # ping NODE
+    for I in `seq 0 $N`; do
+        (
+            local NODE=${ALL_NODES[$I]}
+
+            # ping Hibari package
+            echo -n "$NODE_USER@$NODE ... "
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibari; ./bin/hibari ping" || \
+                die "node $NODE ping failed"
+        )
+    done
 }
 
 
