@@ -302,7 +302,7 @@ scripts (i.e. clus.sh and clus-hibari.sh).
     are not in use by other applications or another Hibari cluster.
 
 
-5. Open "Hibari Web Administration" Page
+5. Open "Hibari Web Administration" page
 
     ------
     $ your-favorite-browser http://dev1:23080

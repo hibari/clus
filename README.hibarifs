@@ -1,16 +1,7 @@
 
-Cluster is a simple tool for installing, configuring, and
-bootstrapping a cluster of HibariFS nodes. The cluster tool requires
-one installer node and one or more target nodes for the HibariFS
-cluster.  The installer node can be a different node or can be one of
-the target nodes.  The cluster tool requires an installing user (that
-is you) and it must be different than the user for HibariFS on the
-target nodes.
-
-NOTE: This tool should meet the needs of most users.  However, this
-tool's "target node" recipe is currently Linux-centric (e.g. useradd,
-userdel, ...).  Patches and contributions for other OS and platforms
-are welcome.
+CAUTION: Please first check the README file contained in the same
+directory as this file for general information on the cluster tool and
+how to setup a Hibari cluster.
 
 Your HibariFS installer node must have following tools/environments
 ready.  For further information and help for related tools, please
@@ -20,82 +11,62 @@ refer to the following links:
 - Expect - http://www.nist.gov/el/msid/expect.cfm
 - Git - http://git-scm.com/
   * *Git 1.5.4 or newer*
-  * _required for Repo and GitHub_
+  * _required for GitHub_
 - Perl - http://www.perl.org/
-- Python - http://www.python.org
-  * *Python 2.4 or newer (CAUTION: Python 3.x might be too new)*
-  * _required for Repo_
-- Repo - http://source.android.com/source/git-repo.html
-- Rsync - (client) http://samba.anu.edu.au/rsync/
 - SSH (client) - http://www.openssh.com/
 
 Your HibariFS target nodes must have following tools/environments
 ready.  For further information and help for related tools, please
 refer to the following links:
 
-- Erlang - http://www.erlang.org/
-  * *R13B04 or newer*
-  * *R14B01 has been tested most recently*
-- Rsync (server) - http://samba.anu.edu.au/rsync/
 - SSH (server) - http://www.openssh.com/
 
 So far, there are no "known" version requirements for Bash, Expect,
-Perl, Rsync, and SSH.
+Perl, and SSH.
 
 
 
 To Setup a HibariFS Cluster
-===========================
+=========================
 
-Assumptions:
+Prerequisites and Assumptions:
 
-A. "running" Hibari cluster (e.g. dev1, dev2, dev3)
-  * Your login account ($USER) exists on admin nodes
-  * Your login account ($USER) is enabled with password-less sudo
-    access on admin nodes
-  * Your login account ($USER) is accessible with password-less ssh
-    login on admin nodes
-
-  * Erlang and SSH (server) is installed on admin nodes
-  * /etc/hosts file on admin and brick nodes contains entries for all
-    target nodes, admin nodes, and brick nodes
-
-B. 1 installer node
+A. 1 installer node
   * Bash, Expect, Git, Perl, Python, and SSH (client) is installed on
     installer node
   * Your login account ($USER) exists on installer node with ssh
     private/public keys and ssh agent setup to enable password-less
     ssh login
   * /etc/hosts file on installer node contains entries for all target
-    nodes, admin nodes, and brick nodes
+    nodes, Hibari admin nodes, and Hibari brick nodes
 
-C. 1 or more cluster target nodes (e.g. dev1, dev2, dev3)
+B. 1 or more cluster target nodes (e.g. dev1, dev2, dev3)
   * Your login account ($USER) exists on target nodes
   * Your login account ($USER) is enabled with password-less sudo
     access on target nodes
   * Your login account ($USER) is accessible with password-less ssh
     login on target nodes
 
-  * Erlang and SSH (server) is installed on target nodes
-  * /etc/hosts file on installer node contains entries for all target
-    nodes, admin nodes, and brick nodes
+  * SSH (server) is installed on target nodes
+  * /etc/hosts file on target nodes contains entries for all target
+    nodes, Hibari admin nodes, and Hibari brick nodes
 
-D. Cluster configuration file. This will show up as hibarifs.config in
+C. Cluster configuration file. This will show up as hibarifs.config in
    latter explanation.  You have to manually create it on installer
    node and later provide it's location as an input to the cluster
    tool.
 
-  * Erlang base directory
   * Hibari Admin nodes
-  * HibariFS nodes
+  * HibariFS Client nodes
 
+D. Hibari cluster
+  * Hibari cluster was setup and is running according to the procedure
+    described in the previously mentioned README file.
 
 Example configuration file (hibarifs.config) for a three node cluster
-co-located with a Hibari cluster:
+that uses the same physical nodes as Hibari:
 
 ------
-ERLANG_DIR=/usr/local/lib/erlang
-
 ADMIN_NODES=(dev1 dev2 dev3)
 CLIENT_NODES=(dev1 dev2 dev3)
 ------
@@ -109,9 +80,10 @@ Example /etc/hosts file entries for above configuration:
 ------
 
     CAUTION: Currently hostname must not contain "-" (minus).  If
-    hostname contain "-", like dev-1 for example, HibariFS Cluster
-    will not startup. This will be fixed in future release and this
-    sentence will be deleted at that time. Thanks for your patience.
+    hostname contain "-", like dev-1 for example, your HibariFS
+    cluster will not startup. This will be fixed in future release and
+    this sentence will be deleted at that time. Thanks for your
+    patience.
 
 
 Instructions:
@@ -119,68 +91,71 @@ Instructions:
 Example how to prepare installing user
 ======================================
 
-1. Setup your user (i.e. your login - $USER) on all HibariFS nodes if
-   not already existing.  This user will be used only for HibariFS
-   installation purposes.
+Setup your user (i.e. your login - $USER) on all HibariFS nodes if not
+already existing.  This user will only be used for HibariFS
+installation purposes.
 
-    a. As root user, add your user to all of the HibariFS nodes and
-       grant sudo access for your user.
+1. As root user, add your user to all of the HibariFS nodes and grant
+   sudo access for your user.
 
-       ------
-       $ useradd $USER
-       $ passwd $USER
-       $ visudo
-         # append the following line and save it
-         $USER  ALL=(ALL)       NOPASSWD: ALL
-       ------
+   ------
+   $ useradd $USER
+   $ passwd $USER
+   $ visudo
+     # append the following line and save it
+     $USER  ALL=(ALL)       NOPASSWD: ALL
+   ------
 
-       NOTE: If you get "sudo: sorry, you must have a tty to run sudo"
-       error while testing 'sudo', consider to comment out following
-       line inside of the /etc/sudoers file:
+   NOTE: If you get "sudo: sorry, you must have a tty to run sudo"
+   error while testing 'sudo', consider to comment out following line
+   inside of the /etc/sudoers file:
 
-       ------
-       $ visudo
-         Defaults    requiretty
-       ------
-
-    b. Create a new ssh private/public key for your user on the
-       installer node.
-
-       ------
-       $ ssh-keygen
-         # enter your password for the private key
-       $ eval `ssh-agent`
-       $ ssh-add ~/.ssh/id_rsa
-         # re-enter your password for the private key
-       ------
-
-    c. Append an entry for the installer node to your
-       ~/.ssh/known_hosts file on each of the HibariFS nodes and
-       append an entry to your ~/.ssh/authorized_keys file on all of
-       the HibariFS nodes for your public ssh key.
-
-       ------
-       $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev1
-       $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev2
-       $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev3
-       ------
-
-       NOTE: If your installer node will be the one of HibariFS
-       cluster nodes, make sure ssh-copy-id to installer node also.
-
-    d. Confirm password-less access to the each of the HibariFS nodes
-       works as expected.
-
-       ------
-       $ ssh $USER@dev1
-       $ ssh $USER@dev2
-       $ ssh $USER@dev3
-       ------
+   ------
+   $ visudo
+     Defaults    requiretty
+   ------
 
 
-    TIP: If needed, check
-    http://inside.mines.edu/~gmurray/HowTo/sshNotes.html for further
-    SSH setup help.
+2. Create a new ssh private/public key for your user on the installer
+   node.
+
+   ------
+   $ ssh-keygen
+     # enter your password for the private key
+   $ eval `ssh-agent`
+   $ ssh-add ~/.ssh/id_rsa
+     # re-enter your password for the private key
+   ------
+
+
+3. Append an entry for the installer node to your ~/.ssh/known_hosts
+   file on each of the HibariFS nodes and append an entry to your
+   ~/.ssh/authorized_keys file on all of the HibariFS nodes for your
+   public ssh key.
+
+   ------
+   $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev1
+   $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev2
+   $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev3
+   ------
+
+   NOTE: If your installer node will be one of the HibariFS cluster
+   nodes, make sure that you ssh-copy-id to the installer node also.
+
+
+4. Confirm password-less access to the each of the HibariFS nodes
+   works as expected.
+
+   ------
+   $ ssh $USER@dev1
+   $ ssh $USER@dev2
+   $ ssh $USER@dev3
+   ------
+
+
+TIP: If needed, check
+http://inside.mines.edu/~gmurray/HowTo/sshNotes.html for further SSH
+setup help.
 
 
 
@@ -189,131 +164,118 @@ Example how to prepare installer node
 
 1. Configure your e-mail and name for Git
 
-    ------
-    $ git config --global user.email "you@example.com"
-    $ git config --global user.name "Your Name"
-    ------
-
-2. Get and install Repo
-
-    ------
-    $ mkdir -p ~/bin
-    $ curl http://android.git.kernel.org/repo > ~/bin/repo
-    $ chmod a+x ~/bin/repo
-    ------
-
-3. Create working directory
-
-    ------
-    $ mkdir working-directory-name
-    ------
-
-4. Initialize clus working directory
-
-    ------
-    $ mkdir working-directory-name/clus
-    $ cd working-directory-name/clus
-    $ ~/bin/repo init -u git://github.com/norton/manifests.git -m clus-default.xml
-    ------
-
-    NOTE: When you are asked like following, just enter as it is.
-       ------
-       Your Name  [Your Name]:
-
-       Your Email [you@example.com]:
-
-       Your identity is: Your Name <you@example.com>
-       is this correct [y/n]? y
-
-       Enable color display in this user account (y/n)? y
-       ------
-
-5. Download Git repositories
-
-    ------
-    $ cd working-directory-name/clus
-    $ ~/bin/repo sync
-    ------
+   ------
+   $ git config --global user.email "you@example.com"
+   $ git config --global user.name "Your Name"
+   ------
 
 
+2. Create a working directory
 
-Example how to create All HibariFS nodes
-========================================
+   ------
+   $ mkdir working-directory-name
+   ------
 
-NOTE: Below operations are all done on installer node via two Bash
+
+3. Download cluster tool's Git repository
+
+   ------
+   $ cd working-directory-name
+   $ git clone git://github.com/hibari/clus.git
+   ------
+
+
+4. Place a copy of the HibariFS pre-built release and your
+   hibarifs.config file into the working directory.
+
+   ------
+   $ cd working-directory-name
+   $ ls -1
+   clus
+   hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE-md5sum.txt
+   hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz
+   hibarifs.config
+   $
+   ------
+
+
+Example how to create all HibariFS nodes
+======================================
+
+All of the operations below are run on the installer node via two Bash
 scripts (i.e. clus.sh and clus-hibarifs.sh).
 
-1. Create (or re-create) "hibarifs" user on All HibariFS nodes
+1. Create (or re-create) "hibarifs" user on all HibariFS nodes
 
-    NOTE: If your ssh private key is protected by a password, please
-    make sure your private key is registered with the ssh agent before
-    proceeding.
+   NOTE: If your ssh private key is protected by a password, please
+   make sure your private key is registered with the ssh agent before
+   proceeding.
 
-    ------
-    $ cd working-directory-name
-    $ for i in dev1 dev2 dev3 ; do ./clus/src/lib/clus/priv/clus.sh -f init hibarifs $i ; done
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
-    ------
+   ------
+   $ cd working-directory-name
+   $ for i in dev1 dev2 dev3 ; do ./clus/priv/clus.sh -f init hibarifs $i ; done
+   hibarifs@dev1
+   hibarifs@dev2
+   hibarifs@dev3
+   ------
 
-    CAUTION: The -f option will forcefully delete and then re-create
-    the "hibarifs" user on the target node.
-
-
-2. Download HibariFS package from GitHub (TBD), transfer package to
-   all HibariFS nodes, and then Setup HibariFS package on All HibariFS
-   nodes for user "hibarifs" using same Erlang cookie as the first
-   admin node's "hibari" user.
-
-    ------
-    $ cd working-directory-name
-    $ ./clus/src/lib/clus/priv/clus-hibarifs.sh -f init hibarifs hibarifs.config hibarifs-v0.1.0 hibari
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
-    ------
-
-    NOTE: When you are asked like following, just enter as it is.
-       ------
-       Your Name  [Your Name]:
-
-       Your Email [you@example.com]:
-
-       Your identity is: Your Name <you@example.com>
-       is this correct [y/n]? y
-
-       Enable color display in this user account (y/n)? y
-       ------
+   CAUTION: The -f option will forcefully delete and then re-create
+   the "hibarifs" user on the target node.
 
 
-3. Start HibariFS package on All HibariFS nodes for user "hibarifs".
+2. Copy pre-built release to all HibariFS nodes and then setup
+   HibariFS package on all HibariFS nodes via the "hibarifs" user.
+   The last argument is the name of the "hibari" user used for the
+   running Hibari cluster.
 
-    ------
-    $ cd working-directory-name
-    $ ./clus/src/lib/clus/priv/clus-hibarifs.sh -f start hibarifs hibarifs.config
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
-    ------
+   ------
+   $ cd working-directory-name
+   $ ./clus/priv/clus-hibarifs.sh -f init hibarifs hibarifs.config hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz hibari
+   hibarifs@dev1
+   hibarifs@dev2
+   hibarifs@dev3
+   ------
 
 
-4. Bootstrap HibariFS package on All HibariFS nodes for user "hibarifs".
+3. Start HibariFS on all HibariFS nodes via the "hibarifs" user
+
+   ------
+   $ cd working-directory-name
+   $ ./clus/priv/clus-hibarifs.sh -f start hibarifs hibarifs.config
+   hibarifs@dev1
+   hibarifs@dev2
+   hibarifs@dev3
+   ------
+
+
+4. Bootstrap HibariFS on first HibariFS admin node via the "hibari"
+   user
 
     ------
     $ cd working-directory-name
-    $ ./clus/src/lib/clus/priv/clus-hibarifs.sh -f bootstrap hibarifs hibarifs.config
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
+    $ ./clus/priv/clus-hibarifs.sh -f bootstrap hibarifs hibarifs.config hibari
+    ok
+    [hibarifs@dev3,hibarifs@dev2,hibarifs@dev1]
+    ------
+
+    The HibariFS bootstrap process registers all of the HibariFS nodes
+    as clients with Hibari's admin server.
+
+
+5. Open "HibariFS Web Administration" page and manually confirm each
+   of the HibariFS nodes is registered via the "Add/Delete a client
+   node monitor." link.
+
+    ------
+    $ your-favorite-browser http://dev1:23080
     ------
 
 
-5. Stop HibariFS package on All HibariFS nodes for user "hibarifs".
+6. Stop HibariFS on all HibariFS nodes via the "hibarifs" user
 
     ------
     $ cd working-directory-name
-    $ ./clus/src/lib/clus/priv/clus-hibarifs.sh -f stop hibarifs hibarifs.config
+    $ ./clus/priv/clus-hibarifs.sh -f stop hibarifs hibarifs.config
     ok
     ok
     ok
@@ -323,5 +285,5 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
     ------
 
 
-TIP: The clus-hibarifs.sh script can be used even after creation of
-the the HibariFS cluster for starting and stopping of the cluster.
+TIP: The clus-hibarifs.sh script can be used for starting and stopping
+of a HibariFS cluster even after it's creation.
