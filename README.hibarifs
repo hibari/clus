@@ -280,7 +280,35 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
     ------
 
 
-6. Stop HibariFS on all HibariFS nodes via the "hibarifs" user
+6. Mount HibariFS on all HibariFS nodes via the "hibarifs" user
+
+    ------
+    $ cd working-directory-name
+    $ ./clus/priv/clus-hibarifs.sh -f mount hibarifs hibarifs.config
+    ok
+    ok
+    ok
+    hibarifs@dev1
+    hibarifs@dev2
+    hibarifs@dev3
+    ------
+
+
+7. Umount HibariFS on all HibariFS nodes via the "hibarifs" user
+
+    ------
+    $ cd working-directory-name
+    $ ./clus/priv/clus-hibarifs.sh -f umount hibarifs hibarifs.config
+    ok
+    ok
+    ok
+    hibarifs@dev1
+    hibarifs@dev2
+    hibarifs@dev3
+    ------
+
+
+8. Stop HibariFS on all HibariFS nodes via the "hibarifs" user
 
     ------
     $ cd working-directory-name
@@ -294,5 +322,6 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
     ------
 
 
-TIP: The clus-hibarifs.sh script can be used for starting and stopping
-of a HibariFS cluster even after it's creation.
+TIP: The clus-hibarifs.sh script can be used for starting, mounting,
+umounting, and stopping of a HibariFS cluster even after it's
+creation.

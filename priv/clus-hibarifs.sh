@@ -38,6 +38,10 @@ main() {
         start
     elif [ "$CMD" = "bootstrap" ] ; then
         bootstrap
+    elif [ "$CMD" = "mount" ] ; then
+        mount
+    elif [ "$CMD" = "umount" ] ; then
+        umount
     elif [ "$CMD" = "ping" ] ; then
         ping
     elif [ "$CMD" = "stop" ] ; then
@@ -69,6 +73,8 @@ Usage: $0 [-f] <command> ...
     init <user> <hibarifs.cfg> <hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE>.tgz <hibariuser>
     start <user> <hibarifs.cfg>
     bootstrap <user> <hibarifs.cfg> <hibariuser>
+    mount <user> <hibarifs.cfg>
+    umount <user> <hibarifs.cfg>
     ping <user> <hibarifs.cfg>
     stop <user> <hibarifs.cfg>
 
@@ -260,6 +266,54 @@ bootstrap() {
         die "node $NODE bootstrap failed"
     $SSH $HIBARI_NODE_USER@$ADMIN_NODE "source .bashrc; cd hibari; ./bin/hibari-admin client-list" || \
         die "node $NODE bootstrap failed"
+}
+
+
+# ----------------------------------------------------------------------
+# mount
+# ----------------------------------------------------------------------
+mount() {
+    local N0=${#CLIENT_NODES[@]}
+    local N=$(($N0 - 1))
+
+    # mount NODE
+    for I in `seq 0 $N`; do
+        (
+            local NODE=${CLIENT_NODES[$I]}
+
+            # mount Hibarifs package
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs-admin mount" || \
+                die "node $NODE mount failed"
+
+            echo $NODE_USER@$NODE
+        ) &
+    done
+
+    wait
+}
+
+
+# ----------------------------------------------------------------------
+# umount
+# ----------------------------------------------------------------------
+umount() {
+    local N0=${#CLIENT_NODES[@]}
+    local N=$(($N0 - 1))
+
+    # umount NODE
+    for I in `seq 0 $N`; do
+        (
+            local NODE=${CLIENT_NODES[$I]}
+
+            # umount Hibarifs package
+            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs-admin umount" || \
+                die "node $NODE umount failed"
+
+            echo $NODE_USER@$NODE
+        ) &
+    done
+
+    wait
 }
 
 
