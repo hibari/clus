@@ -219,7 +219,7 @@ hibarifs/etc/vm.args" || \
 
 fetchcookie() {
     local NODE=${ADMIN_NODES[0]}
-    $SSH $HIBARI_NODE_USER@$NODE "grep setcookie hibari/etc/vm.args | xargs -n 1 echo | grep -v setcookie" || \
+    $SSH $HIBARI_NODE_USER@$NODE "grep setcookie hibari/etc/vm.args | xargs -n 1 echo | grep -v setcookie | tr -c -d 'a-zA-Z0-9_'" || \
         die "node $NODE vm.args setup failed"
 }
 

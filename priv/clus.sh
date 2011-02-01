@@ -204,7 +204,7 @@ init() {
 
 
 randpasswd() {
-    echo `(cat /dev/urandom | strings | tr -c -d "a-zA-Z0-9-_" | fold -w 25 | head -1) 2> $NULLFILE`
+    echo `(cat /dev/urandom | strings | tr -c -d "a-zA-Z0-9_" | fold -w 25 | head -1) 2> $NULLFILE`
 }
 
 
