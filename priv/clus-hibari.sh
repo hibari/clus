@@ -223,10 +223,10 @@ init() {
             local NODE=${ALL_NODES[$I]}
             local ADMIN_NODES_MINUSMOI=(`echo ${ADMIN_NODES[@]} | xargs -n 1 echo | grep -v $NODE | xargs echo`)
 
-            local CS_NODE=(`hibari_nodes_cs $NODE`)
-            local CS_ALL_NODES=(`hibari_nodes_cs ${ALL_NODES[@]}`)
-            local CS_ADMIN_NODES=(`hibari_nodes_cs ${ADMIN_NODES[@]}`)
-            local CS_ADMIN_NODES_MINUSMOI=(`hibari_nodes_cs ${ADMIN_NODES_MINUSMOI[@]}`)
+            local WS_NODE=(`hibari_nodes_ws $NODE`)
+            local CS_ALL_NODES=(`hibari_nodes_cs_squote ${ALL_NODES[@]}`)
+            local CS_ADMIN_NODES=(`hibari_nodes_cs_squote ${ADMIN_NODES[@]}`)
+            local CS_ADMIN_NODES_MINUSMOI=(`hibari_nodes_cs_squote ${ADMIN_NODES_MINUSMOI[@]}`)
 
             # stop Hibari
             $SSH $NODE_USER@$NODE "(source .bashrc; cd hibari &> $NULLFILE; ./bin/hibari stop &> $NULLFILE) || true" || \
@@ -245,25 +245,25 @@ init() {
 
             # configure Hibari package
             $SSH $NODE_USER@$NODE "sed -i.bak \
--e 's/-sname .*/-sname $CS_NODE/' \
--e 's/-name .*/-sname $CS_NODE/' \
--e 's/-setcookie .*/-setcookie $COOKIE/' \
+-e \"s/-sname .*/-sname $WS_NODE/\" \
+-e \"s/-name .*/-sname $WS_NODE/\" \
+-e \"s/-setcookie .*/-setcookie $COOKIE/\" \
 hibari/etc/vm.args" || \
                 die "node $NODE vm.args setup failed"
 
             $SSH $NODE_USER@$NODE "sed -i.bak \
--e 's/{distributed, \[{gdss_admin, \(.*\), .*}\]}/{distributed, \[{gdss_admin, \1, [$CS_ADMIN_NODES]}\]}/' \
--e 's/{sync_nodes_optional,.*}/{sync_nodes_optional, [$CS_ADMIN_NODES_MINUSMOI]}/' \
--e 's/{admin_server_distributed_nodes,.*}/{admin_server_distributed_nodes, [$CS_ADMIN_NODES]}/' \
--e 's/{network_a_address,.*}/{network_a_address, \"${ALL_NETA_ADDRS[$I]}\"}/' \
--e 's/{network_b_address,.*}/{network_b_address, \"${ALL_NETB_ADDRS[$I]}\"}/' \
--e 's/{network_a_broadcast_address,.*}/{network_a_broadcast_address, \"$ALL_NETA_BCAST\"}/' \
--e 's/{network_b_broadcast_address,.*}/{network_b_broadcast_address, \"$ALL_NETB_BCAST\"}/' \
--e 's/{network_a_tiebreaker,.*}/{network_a_tiebreaker, \"$ALL_NETA_TIEBREAKER\"}/' \
--e 's/{network_monitor_enable,.*}/{network_monitor_enable, true}/' \
--e 's/{network_monitor_monitored_nodes,.*}/{network_monitor_monitored_nodes, [$CS_ALL_NODES]}/' \
--e 's/{heartbeat_status_udp_port,.*}/{heartbeat_status_udp_port, $ALL_HEART_UDP_PORT}/' \
--e 's/{heartbeat_status_xmit_udp_port,.*}/{heartbeat_status_xmit_udp_port, $ALL_HEART_XMIT_UDP_PORT}/' \
+-e \"s/{distributed, \[{gdss_admin, \(.*\), .*}\]}/{distributed, \[{gdss_admin, \1, [$CS_ADMIN_NODES]}\]}/\" \
+-e \"s/{sync_nodes_optional,.*}/{sync_nodes_optional, [$CS_ADMIN_NODES_MINUSMOI]}/\" \
+-e \"s/{admin_server_distributed_nodes,.*}/{admin_server_distributed_nodes, [$CS_ADMIN_NODES]}/\" \
+-e \"s/{network_a_address,.*}/{network_a_address, \\\"${ALL_NETA_ADDRS[$I]}\\\"}/\" \
+-e \"s/{network_b_address,.*}/{network_b_address, \\\"${ALL_NETB_ADDRS[$I]}\\\"}/\" \
+-e \"s/{network_a_broadcast_address,.*}/{network_a_broadcast_address, \\\"$ALL_NETA_BCAST\\\"}/\" \
+-e \"s/{network_b_broadcast_address,.*}/{network_b_broadcast_address, \\\"$ALL_NETB_BCAST\\\"}/\" \
+-e \"s/{network_a_tiebreaker,.*}/{network_a_tiebreaker, \\\"$ALL_NETA_TIEBREAKER\\\"}/\" \
+-e \"s/{network_monitor_enable,.*}/{network_monitor_enable, true}/\" \
+-e \"s/{network_monitor_monitored_nodes,.*}/{network_monitor_monitored_nodes, [$CS_ALL_NODES]}/\" \
+-e \"s/{heartbeat_status_udp_port,.*}/{heartbeat_status_udp_port, $ALL_HEART_UDP_PORT}/\" \
+-e \"s/{heartbeat_status_xmit_udp_port,.*}/{heartbeat_status_xmit_udp_port, $ALL_HEART_XMIT_UDP_PORT}/\" \
 hibari/etc/app.config" || \
                 die "node $NODE app.config setup failed"
 
@@ -386,6 +386,28 @@ hibari_nodes_cs() {
 
 
 # ----------------------------------------------------------------------
+# hibari_nodes_cs_squote
+# ----------------------------------------------------------------------
+hibari_nodes_cs_squote() {
+    local NODES=($@)
+    local N0=${#NODES[@]}
+
+    if [ $N0 -gt 0 ] ; then
+        local N=$(($N0 - 1))
+        local nodes=""
+
+        for X in `seq 0 $N`; do
+            local node=`echo ${NODES[$X]} | sed "s/'//g"`
+            nodes="$nodes,'hibari@$node'"
+        done
+        echo `echo $nodes | sed 's/^,//'`
+    else
+        echo
+    fi
+}
+
+
+# ----------------------------------------------------------------------
 # hibari_nodes_ws
 # ----------------------------------------------------------------------
 hibari_nodes_ws() {
@@ -399,6 +421,28 @@ hibari_nodes_ws() {
         for X in `seq 0 $N`; do
             local node=`echo ${NODES[$X]} | sed "s/'//g"`
             nodes="$nodes hibari@$node"
+        done
+        echo `echo $nodes | sed 's/^ //'`
+    else
+        echo
+    fi
+}
+
+
+# ----------------------------------------------------------------------
+# hibari_nodes_ws_squote
+# ----------------------------------------------------------------------
+hibari_nodes_ws_squote() {
+    local NODES=($@)
+    local N0=${#NODES[@]}
+
+    if [ $N0 -gt 0 ] ; then
+        local N=$(($N0 - 1))
+        local nodes=""
+
+        for X in `seq 0 $N`; do
+            local node=`echo ${NODES[$X]} | sed "s/'//g"`
+            nodes="$nodes 'hibari@$node'"
         done
         echo `echo $nodes | sed 's/^ //'`
     else

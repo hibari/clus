@@ -191,7 +191,7 @@ init() {
     for I in `seq 0 $N`; do
         (
             local NODE=${CLIENT_NODES[$I]}
-            local CS_NODE=(`hibarifs_nodes_cs $NODE`)
+            local WS_NODE=(`hibarifs_nodes_ws $NODE`)
 
             # stop Hibarifs
             $SSH $NODE_USER@$NODE "(source .bashrc; cd hibarifs &> $NULLFILE; ./bin/hibarifs stop &> $NULLFILE) || true" || \
@@ -210,8 +210,8 @@ init() {
 
             # configure Hibarifs package
             $SSH $NODE_USER@$NODE "sed -i.bak \
--e 's/-sname .*/-sname $CS_NODE/' \
--e 's/-name .*/-sname $CS_NODE/' \
+-e 's/-sname .*/-sname $WS_NODE/' \
+-e 's/-name .*/-sname $WS_NODE/' \
 -e 's/-setcookie .*/-setcookie $COOKIE/' \
 hibarifs/etc/vm.args" || \
                 die "node $NODE vm.args setup failed"
@@ -385,6 +385,28 @@ hibarifs_nodes_cs() {
 
 
 # ----------------------------------------------------------------------
+# hibarifs_nodes_cs_squote
+# ----------------------------------------------------------------------
+hibarifs_nodes_cs_squote() {
+    local NODES=($@)
+    local N0=${#NODES[@]}
+
+    if [ $N0 -gt 0 ] ; then
+        local N=$(($N0 - 1))
+        local nodes=""
+
+        for X in `seq 0 $N`; do
+            local node=`echo ${NODES[$X]} | sed "s/'//g"`
+            nodes="$nodes,'hibarifs@$node'"
+        done
+        echo `echo $nodes | sed 's/^,//'`
+    else
+        echo
+    fi
+}
+
+
+# ----------------------------------------------------------------------
 # hibarifs_nodes_ws
 # ----------------------------------------------------------------------
 hibarifs_nodes_ws() {
@@ -398,6 +420,28 @@ hibarifs_nodes_ws() {
         for X in `seq 0 $N`; do
             local node=`echo ${NODES[$X]} | sed "s/'//g"`
             nodes="$nodes hibarifs@$node"
+        done
+        echo `echo $nodes | sed 's/^ //'`
+    else
+        echo
+    fi
+}
+
+
+# ----------------------------------------------------------------------
+# hibarifs_nodes_ws_squote
+# ----------------------------------------------------------------------
+hibarifs_nodes_ws_squote() {
+    local NODES=($@)
+    local N0=${#NODES[@]}
+
+    if [ $N0 -gt 0 ] ; then
+        local N=$(($N0 - 1))
+        local nodes=""
+
+        for X in `seq 0 $N`; do
+            local node=`echo ${NODES[$X]} | sed "s/'//g"`
+            nodes="$nodes 'hibarifs@$node'"
         done
         echo `echo $nodes | sed 's/^ //'`
     else

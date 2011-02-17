@@ -79,12 +79,6 @@ Example /etc/hosts file entries for above configuration:
 10.181.165.232  dev3.your-domain.com    dev3
 ------
 
-    CAUTION: Currently hostname must not contain "-" (minus).  If
-    hostname contain "-", like dev-1 for example, your HibariFS
-    cluster will not startup. This will be fixed in future release and
-    this sentence will be deleted at that time. Thanks for your
-    patience.
-
 
 Instructions:
 
