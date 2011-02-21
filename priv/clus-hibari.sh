@@ -311,7 +311,7 @@ bootstrap() {
     local WS_BRICK_NODES=`hibari_nodes_ws ${BRICK_NODES[@]}`
 
     # bootstrap Hibari package
-    $SSH $NODE_USER@$NODE "source .bashrc; cd hibari; ./bin/hibari-admin bootstrap $BRICKS_PER_CHAIN $WS_BRICK_NODES" || \
+    $SSH $NODE_USER@$NODE "source .bashrc; cd hibari; ./bin/hibari-admin bootstrap -bricksperchain $BRICKS_PER_CHAIN $WS_BRICK_NODES" || \
         die "node $NODE bootstrap failed"
 
     echo "$NODE_USER@$NODE => $WS_BRICK_NODES"
