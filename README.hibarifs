@@ -194,7 +194,7 @@ Example how to prepare installer node
 
 
 Example how to create all HibariFS nodes
-======================================
+========================================
 
 All of the operations below are run on the installer node via two Bash
 scripts (i.e. clus.sh and clus-hibarifs.sh).
@@ -319,3 +319,73 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
 TIP: The clus-hibarifs.sh script can be used for starting, mounting,
 umounting, and stopping of a HibariFS cluster even after it's
 creation.
+
+
+Other Considerations
+====================
+
+Depending on deployment and usage of HibariFS, additional FUSE and
+Hibari related configuration items might be required.
+
+*FUSE*
+
+A common configuration scenario is to allow other users to access the
+mounted filesystem.  The /etc/fuse.conf file should be changed as
+follows:
+
+    ------
+    $ cat /etc/fuse.conf
+    user_allow_other
+    ------
+
+Similiarly, the HibariFS "hibarifs_fuse" application's configuration
+for the mount options parameter should be set to "allow_other".  This
+configuration is contained in the example etc/app.config file below.
+
+*HIBARI*
+
+A common configuration item is to specify the Hibari table used by the
+HibariFS client.  The name of the table and it's corresponding
+varprefixnum value should be set to "mount_table" and
+"mount_varprefixnum", respectively.  This configuration is contained
+in the example etc/app.config file below.
+
+*EXAMPLE etc/app.config file*
+
+    ------
+    %%
+    %% HibariFS config
+    %%
+    hibarifs_fuse,
+    [{linked_in, false}
+     , {mount_point, "/mnt/tab1"}
+     , {mount_opts, "allow_other"}
+     , {make_mount_point, true}
+     , {mount_table, tab1}
+     , {mount_varprefixnum, 2}
+     , {mount_timeout, 5000}
+     , {dirmode, 8#00777}
+     , {filemode, 8#00666}
+     , {delayed_write, true}
+     , {attr_timeout, 1000}
+     , {entry_timeout, 1000}
+     , {cache_timeout, 5000}
+    ]}
+    ------
+
+
+Operating System Specifics - CentOS (5.5)
+=========================================
+
+HibariFS is implemented as a FUSE fileystem.  The following steps are
+required to setup FUSE for CentOS.
+
+    ------
+    $ modprobe fuse
+    $ chmod go+rw /dev/fuse
+    $ yum install fuse fuse-devel fuse-libs
+    $ chmod +x /bin/fusermount
+    ------
+
+CAUTION: kernel 2.6.18-164 version or newer is required for FUSE and
+HibariFS.
