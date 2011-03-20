@@ -10,7 +10,8 @@ node and on your target Hibari nodes.
 - Set up proper user privileges on the "installer" node and on your target
 Hibari nodes.
 
-For guidance on these tasks, see the "Getting Started" chapter in your Hibari Application Developer's Guide.
+For guidance on these tasks, see the "Getting Started" chapter in your Hibari 
+Application Developer's Guide.
 (http://hibari.github.com/hibari-doc/hibari-app-developer-guide.en.html)
 
 This README describes how to configure the Cluster tool, and how to use
@@ -35,9 +36,9 @@ and then later use the file as input when you run the Cluster tool.
 It's simplest to create the file in the same working directory in
 which you downloaded the cluster tool. You can give the file any name
 that you want; for purposes of these instructions we will use the file
-name +hibari.config+.
+name hibari.config.
 
-Below is a sample +hibari.config+ file. The file that you create must
+Below is a sample hibari.config file. The file that you create must
 include all of these parameters, and the values must be formatted in
 the same way as in this example (with parentheses and quotation marks
 as shown). Parameter descriptions follow the example file.
@@ -58,16 +59,16 @@ ALL_HEART_UDP_PORT="63099"
 ALL_HEART_XMIT_UDP_PORT="63100"
 ------
 
-- +ADMIN_NODES+
+- ADMIN_NODES
   * Host names of the nodes that will be eligible to run the Hibari
     Admin Server. For complete information on the Admin Server, see
    "The Admin Server Application" in the Hibari System Administrator's Guide.
-- +BRICK_NODES+
+- BRICK_NODES
   * Host names of the nodes that will serve as Hibari storage
     bricks. Note that in the sample configuration file above there are
     three storage brick nodes (dev1, dev2, and dev3), and these three
     nodes are each eligible to run the Admin Server.
-- +BRICKS_PER_CHAIN+
+- BRICKS_PER_CHAIN
   * Number of bricks per replication chain. For example, with two
     bricks per chain there will be two copies of the data stored in
     the chain (one copy on each brick); with three bricks per chain
@@ -76,29 +77,29 @@ ALL_HEART_XMIT_UDP_PORT="63100"
     Consistency" in the Hibari Application Developer's Guide. For
     chain replication detail, see the Hibari System Administrator's
     Guide.
-- +ALL_NODES+
-  * This list of all Hibari nodes is the union of +ADMIN_NODES+ and
-    +BRICK_NODES+.
-- +ALL_NETA_ADDRS+
+- ALL_NODES
+  * This list of all Hibari nodes is the union of ADMIN_NODES and
+    BRICK_NODES.
+- ALL_NETA_ADDRS
   * As described in "The Partition Detector Application" in the Hibari System
     Administrator's guide, the nodes in a multi-node Hibari cluster
     should be connected by two networks, Network A and Network B, in
     order to detect and manage network partitions. The
-    +ALL_NETA_ADDRS+ parameter specifies the IP addresses of each
+    ALL_NETA_ADDRS parameter specifies the IP addresses of each
     Hibari node within Network A, which is the network through which
     data replication and other Erlang communications will take
     place. The list of the IP addresses should correspond in order to
-    host names you listed in the +ALL_NODES+ setting.
-- +ALL_NETB_ADDRS+
+    host names you listed in the ALL_NODES setting.
+- ALL_NETB_ADDRS
   * IP addresses of each Hibari node within Network B. Network B is
     used only for heartbeat broadcasts that help to detect network
     partitions. The list of the IP addresses should correspond in
-    order to host names you listed in the +ALL_NODES+ setting.
-- +ALL_NETA_BCAST+
+    order to host names you listed in the ALL_NODES setting.
+- ALL_NETA_BCAST
   * IP broadcast address for Network A.
-- +ALL_NETB_BCAST+
+- ALL_NETB_BCAST
   * IP broadcast address for Network B.
-- +ALL_NETA_TIEBREAKER+
+- ALL_NETA_TIEBREAKER
   * Within Network A, the IP address for the network monitoring
     application to use as a "tiebreaker" in the event of a
     partition. If the network monitoring application on a Hibari node
@@ -108,9 +109,9 @@ ALL_HEART_XMIT_UDP_PORT="63100"
     partition. Ideally the tiebreaker should be the address of the
     Layer 2 switch or Layer 3 router that all Erlang network
     distribution communications flow through.
-- +ALL_HEART_UDP_PORT+
+- ALL_HEART_UDP_PORT
   * UDP port for heartbeat listener.
-- +ALL_HEART_XMIT_UDP_PORT+
+- ALL_HEART_XMIT_UDP_PORT
   * UDP port for heartbeat transmitter.
 
 For more detail on network monitoring configuration settings, see the
@@ -123,15 +124,19 @@ testing and development purposes the same physical network can be used
 for Network A and Network B (as in the sample configuration file
 above).
 
-As a final configuration step, make sure that on each Hibari node, the
-+/etc/hosts+ file has entries for all Hibari nodes in the cluster. For
-example:
+As final configuration steps, on *each Hibari node*:
+
+- Make sure that the /etc/hosts file has entries for all Hibari nodes 
+in the cluster. For example:
 
 ------
 10.181.165.230  dev1.your-domain.com    dev1
 10.181.165.231  dev2.your-domain.com    dev2
 10.181.165.232  dev3.your-domain.com    dev3
 ------
+
+- In the system's /etc/sysctl.conf file, set vm.swappiness=0. Swappiness 
+is not desirable for an Erlang VM.
 
 ==== Installing Hibari
 
@@ -141,7 +146,7 @@ steps to create your Hibari cluster:
 1. In the working directory in which you downloaded the Cluster tool and
   created your cluster configuration file, place
   a copy of the Hibari tarball package and md5sum file:
-+
+
 ------
 $ cd working-directory
 $ ls -1
@@ -153,31 +158,31 @@ $
 ------
 
 2. Create the "hibari" user on all Hibari nodes:
-+
+
 ------
 $ for i in dev1 dev2 dev3 ; do ./clus/priv/clus.sh -f init hibari $i ; done
 hibari@dev1
 hibari@dev2
 hibari@dev3
 ------
-+
+
 NOTE: If the "hibari" user already exists on the target nodes, the -f
 option will forcefully delete and then re-create the "hibari" user.
-+
+
 3. Install the Hibari package on all Hibari nodes, via the newly
   created "hibari" user:
-+
+
 ------
 $ ./clus/priv/clus-hibari.sh -f init hibari hibari.config hibari-X.Y.Z-DIST-ARCH-WORDSIZE.tgz
 hibari@dev1
 hibari@dev2
 hibari@dev3
 ------
-+
+
 NOTE: By default the Cluster tool installs Hibari into
-+/usr/local/var/lib+ on the target nodes. If you prefer a different
-location, before doing the install open the +clus.sh+ script (in your
-working directory, under +/clus/priv/+) and edit the +CT_HOMEBASEDIR+
+/usr/local/var/lib on the target nodes. If you prefer a different
+location, before doing the install open the clus.sh script (in your
+working directory, under /clus/priv/) and edit the CT_HOMEBASEDIR
 variable.
 
 === Starting and Stopping a Multi-Node Hibari Cluster
@@ -186,14 +191,14 @@ You can use the Cluster installer tool to start and stop your
 multi-node Hibari cluster, working from the same node from which you
 managed the installation process. Note that in each of the Hibari
 commands in this section you'll be referencing the name of the
-link:#config-cluster[Cluster tool configuration file] that you created
-during the installation procedure.
+Cluster tool configuration file that you created during the installation 
+procedure.
 
 ==== Starting and Bootstrapping the Hibari Cluster
 
 1. Change to the working directory in which you downloaded the Cluster
 tool, then start Hibari on all Hibari nodes via the "hibari" user:
-+
+
 ------
 $ cd working-directory
 $ ./clus/priv/clus-hibari.sh -f start hibari hibari.config
@@ -201,20 +206,20 @@ hibari@dev1
 hibari@dev2
 hibari@dev3
 ------
-+
+
 2. If this is the first time you've started Hibari, bootstrap the
   system via the "hibari" user:
-+
+
 ------
 $ ./clus/priv/clus-hibari.sh -f bootstrap hibari hibari.config
 hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
 ------
-+
+
 The Hibari bootstrap process starts Hibari's Admin Server on the first
 eligible admin node and creates a single table "tab1" serving as Hibari's 
 default table. For information about creating additional tables, see 
 "Creating New Tables" in the Hibari Application Developer's Guide.
-+
+
 NOTE: If bootstrapping fails due to "another_admin_server_running"
 error, please stop the other Hibari cluster(s) running on the network;
 or reconfigure the Cluster tool to assign Hibari heartbeat listener ports
@@ -226,13 +231,13 @@ repeat the cluster installation procedure.
 Do these simple checks to verify that Hibari is up and running.
 
 1. Confirm that you can open the "Hibari Web Administration" page:
-+
+
 ------
 $ your-favorite-browser http://dev1:23080
 ------
-+
+
 2. Confirm that you can successfully ping each of your Hibari nodes:
-+
+
 ------
 $ ./clus/priv/clus-hibari.sh -f ping hibari hibari.config
 hibari@dev1 ... pong
