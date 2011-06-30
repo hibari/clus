@@ -324,8 +324,8 @@ creation.
 Other Considerations
 ====================
 
-Depending on deployment and usage of HibariFS, additional FUSE and
-Hibari related configuration items might be required.
+Depending on deployment and usage of HibariFS, additional FUSE,
+Hibari and Linux Kernel related configuration items might be required.
 
 *FUSE*
 
@@ -350,26 +350,62 @@ varprefixnum value should be set to "mount_table" and
 "mount_varprefixnum", respectively.  This configuration is contained
 in the example etc/app.config file below.
 
+*Linux Kernel perameters*
+
+On your HibariFS node, in the system's /etc/sysctl.conf file, add the
+following settings.
+
+    ------
+    # Swappiness is not desirable for en Erlnag VM.
+    vm.swappiness=0
+
+    # This setting makes the kernel to prefer pagecache over
+    # inode/dentry cache. HibariFS node typically has a large amount
+    # of RAM and kernel tends to cache too many inodes with the
+    # default value (100). This will lead HibariFS to create more
+    # Erlang processes than it actually needs so it will consume more
+    # memory. Having the value 10000 will improve this behavior.
+    #
+    vm.vfs_cache_pressure=10000
+
+    # Uncomment this if your HibariFS node has enough RAM and you
+    # want to be sure that swapping would not happen.
+    # 0: (default) allow over-committing memory
+    # 2: don't allow over-ommitting memory
+    #
+    #vm.overcommit_memory=2
+
+    # You can adjust this setting to limit the total virtual address
+    # space on the system. The limit is calicuated by the follwoing
+    # formula:
+    # swap_space + (RAM * (overcommit_ratio/100))
+    #
+    #vm.overcommit_ratio=0
+    ------
+
 *EXAMPLE etc/app.config file*
 
     ------
     %%
     %% HibariFS config
     %%
-    hibarifs_fuse,
-    [{linked_in, false}
+   {hibarifs_fuse,
+    [{spawn_opts, [{fullsweep_after, 5}]}
      , {mount_point, "/mnt/tab1"}
      , {mount_opts, "allow_other"}
      , {make_mount_point, true}
      , {mount_table, tab1}
-     , {mount_varprefixnum, 2}
-     , {mount_timeout, 5000}
-     , {dirmode, 8#00777}
-     , {filemode, 8#00666}
-     , {delayed_write, true}
+     , {mount_varprefixnum, 0}
+     , {mount_timeout, 60000}
+     , {dirmode, 8#00775}
+     , {filemode, 8#00664}
      , {attr_timeout, 1000}
      , {entry_timeout, 1000}
-     , {cache_timeout, 5000}
+     , {cache_dirtimeout, 12000}
+     , {cache_filetimeout, 6000}
+     , {cache_dirhibernate, true}
+     , {cache_filehibernate, true}
+     , {cache_spawn_opts, [{fullsweep_after, 5}]}
     ]}
     ------
 
