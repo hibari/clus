@@ -3,7 +3,7 @@ CAUTION: Please first check the README file contained in the same
 directory as this file for general information on the cluster tool and
 how to setup a Hibari cluster.
 
-Your HibariFS installer node must have following tools/environments
+Your SFS installer node must have following tools/environments
 ready.  For further information and help for related tools, please
 refer to the following links:
 
@@ -15,7 +15,7 @@ refer to the following links:
 - Perl - http://www.perl.org/
 - SSH (client) - http://www.openssh.com/
 
-Your HibariFS target nodes must have following tools/environments
+Your SFS target nodes must have following tools/environments
 ready.  For further information and help for related tools, please
 refer to the following links:
 
@@ -26,7 +26,7 @@ Perl, and SSH.
 
 
 
-To Setup a HibariFS Cluster
+To Setup a SFS Cluster
 =========================
 
 Prerequisites and Assumptions:
@@ -51,19 +51,19 @@ B. 1 or more cluster target nodes (e.g. dev1, dev2, dev3)
   * /etc/hosts file on target nodes contains entries for all target
     nodes, Hibari admin nodes, and Hibari brick nodes
 
-C. Cluster configuration file. This will show up as hibarifs.config in
+C. Cluster configuration file. This will show up as sfs.config in
    latter explanation.  You have to manually create it on installer
    node and later provide it's location as an input to the cluster
    tool.
 
   * Hibari Admin nodes
-  * HibariFS Client nodes
+  * SFS Client nodes
 
 D. Hibari cluster
   * Hibari cluster was setup and is running according to the procedure
     described in the previously mentioned README file.
 
-Example configuration file (hibarifs.config) for a three node cluster
+Example configuration file (sfs.config) for a three node cluster
 that uses the same physical nodes as Hibari:
 
 ------
@@ -85,11 +85,11 @@ Instructions:
 Example how to prepare installing user
 ======================================
 
-Setup your user (i.e. your login - $USER) on all HibariFS nodes if not
-already existing.  This user will only be used for HibariFS
+Setup your user (i.e. your login - $USER) on all SFS nodes if not
+already existing.  This user will only be used for SFS
 installation purposes.
 
-1. As root user, add your user to all of the HibariFS nodes and grant
+1. As root user, add your user to all of the SFS nodes and grant
    sudo access for your user.
 
    ------
@@ -123,8 +123,8 @@ installation purposes.
 
 
 3. Append an entry for the installer node to your ~/.ssh/known_hosts
-   file on each of the HibariFS nodes and append an entry to your
-   ~/.ssh/authorized_keys file on all of the HibariFS nodes for your
+   file on each of the SFS nodes and append an entry to your
+   ~/.ssh/authorized_keys file on all of the SFS nodes for your
    public ssh key.
 
    ------
@@ -133,11 +133,11 @@ installation purposes.
    $ ssh-copy-id -i ~/.ssh/id_rsa.pub $USER@dev3
    ------
 
-   NOTE: If your installer node will be one of the HibariFS cluster
+   NOTE: If your installer node will be one of the SFS cluster
    nodes, make sure that you ssh-copy-id to the installer node also.
 
 
-4. Confirm password-less access to the each of the HibariFS nodes
+4. Confirm password-less access to the each of the SFS nodes
    works as expected.
 
    ------
@@ -179,27 +179,27 @@ Example how to prepare installer node
    ------
 
 
-4. Place a copy of the HibariFS pre-built release and your
-   hibarifs.config file into the working directory.
+4. Place a copy of the SFS pre-built release and your
+   sfs.config file into the working directory.
 
    ------
    $ cd working-directory-name
    $ ls -1
    clus
-   hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE-md5sum.txt
-   hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz
-   hibarifs.config
+   sfs-X.Y.Z-DIST-ARCH-WORDSIZE-md5sum.txt
+   sfs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz
+   sfs.config
    $
    ------
 
 
-Example how to create all HibariFS nodes
+Example how to create all SFS nodes
 ========================================
 
 All of the operations below are run on the installer node via two Bash
-scripts (i.e. clus.sh and clus-hibarifs.sh).
+scripts (i.e. clus.sh and clus-sfs.sh).
 
-1. Create (or re-create) "hibarifs" user on all HibariFS nodes
+1. Create (or re-create) "sfs" user on all SFS nodes
 
    NOTE: If your ssh private key is protected by a password, please
    make sure your private key is registered with the ssh agent before
@@ -207,57 +207,57 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
 
    ------
    $ cd working-directory-name
-   $ for i in dev1 dev2 dev3 ; do ./clus/priv/clus.sh -f init hibarifs $i ; done
-   hibarifs@dev1
-   hibarifs@dev2
-   hibarifs@dev3
+   $ for i in dev1 dev2 dev3 ; do ./clus/priv/clus.sh -f init sfs $i ; done
+   sfs@dev1
+   sfs@dev2
+   sfs@dev3
    ------
 
    CAUTION: The -f option will forcefully delete and then re-create
-   the "hibarifs" user on the target node.
+   the "sfs" user on the target node.
 
 
-2. Copy pre-built release to all HibariFS nodes and then setup
-   HibariFS package on all HibariFS nodes via the "hibarifs" user.
+2. Copy pre-built release to all SFS nodes and then setup
+   SFS package on all SFS nodes via the "sfs" user.
    The last argument is the name of the "hibari" user used for the
    running Hibari cluster.
 
    ------
    $ cd working-directory-name
-   $ ./clus/priv/clus-hibarifs.sh -f init hibarifs hibarifs.config hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz hibari
-   hibarifs@dev1
-   hibarifs@dev2
-   hibarifs@dev3
+   $ ./clus/priv/clus-sfs.sh -f init sfs sfs.config sfs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz hibari
+   sfs@dev1
+   sfs@dev2
+   sfs@dev3
    ------
 
 
-3. Start HibariFS on all HibariFS nodes via the "hibarifs" user
+3. Start SFS on all SFS nodes via the "sfs" user
 
    ------
    $ cd working-directory-name
-   $ ./clus/priv/clus-hibarifs.sh -f start hibarifs hibarifs.config
-   hibarifs@dev1
-   hibarifs@dev2
-   hibarifs@dev3
+   $ ./clus/priv/clus-sfs.sh -f start sfs sfs.config
+   sfs@dev1
+   sfs@dev2
+   sfs@dev3
    ------
 
 
-4. Bootstrap HibariFS on first HibariFS admin node via the "hibari"
+4. Bootstrap SFS on first SFS admin node via the "hibari"
    user
 
     ------
     $ cd working-directory-name
-    $ ./clus/priv/clus-hibarifs.sh -f bootstrap hibarifs hibarifs.config hibari
+    $ ./clus/priv/clus-sfs.sh -f bootstrap sfs sfs.config hibari
     ok
-    [hibarifs@dev3,hibarifs@dev2,hibarifs@dev1]
+    [sfs@dev3,sfs@dev2,sfs@dev1]
     ------
 
-    The HibariFS bootstrap process registers all of the HibariFS nodes
+    The SFS bootstrap process registers all of the SFS nodes
     as clients with Hibari's admin server.
 
 
-5. Open "HibariFS Web Administration" page and manually confirm each
-   of the HibariFS nodes is registered via the "Add/Delete a client
+5. Open "SFS Web Administration" page and manually confirm each
+   of the SFS nodes is registered via the "Add/Delete a client
    node monitor." link.  Next, ping each of the nodes to check the
    health.
 
@@ -267,64 +267,64 @@ scripts (i.e. clus.sh and clus-hibarifs.sh).
 
     ------
     $ cd working-directory-name
-    $ ./clus/priv/clus-hibarifs.sh -f ping hibarifs hibarifs.config
-    hibarifs@dev1 ... pong
-    hibarifs@dev2 ... pong
-    hibarifs@dev3 ... pong
+    $ ./clus/priv/clus-sfs.sh -f ping sfs sfs.config
+    sfs@dev1 ... pong
+    sfs@dev2 ... pong
+    sfs@dev3 ... pong
     ------
 
 
-6. Mount HibariFS on all HibariFS nodes via the "hibarifs" user
-
-    ------
-    $ cd working-directory-name
-    $ ./clus/priv/clus-hibarifs.sh -f mount hibarifs hibarifs.config
-    ok
-    ok
-    ok
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
-    ------
-
-
-7. Umount HibariFS on all HibariFS nodes via the "hibarifs" user
+6. Mount SFS on all SFS nodes via the "sfs" user
 
     ------
     $ cd working-directory-name
-    $ ./clus/priv/clus-hibarifs.sh -f umount hibarifs hibarifs.config
+    $ ./clus/priv/clus-sfs.sh -f mount sfs sfs.config
     ok
     ok
     ok
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
+    sfs@dev1
+    sfs@dev2
+    sfs@dev3
     ------
 
 
-8. Stop HibariFS on all HibariFS nodes via the "hibarifs" user
+7. Umount SFS on all SFS nodes via the "sfs" user
 
     ------
     $ cd working-directory-name
-    $ ./clus/priv/clus-hibarifs.sh -f stop hibarifs hibarifs.config
+    $ ./clus/priv/clus-sfs.sh -f umount sfs sfs.config
     ok
     ok
     ok
-    hibarifs@dev1
-    hibarifs@dev2
-    hibarifs@dev3
+    sfs@dev1
+    sfs@dev2
+    sfs@dev3
     ------
 
 
-TIP: The clus-hibarifs.sh script can be used for starting, mounting,
-umounting, and stopping of a HibariFS cluster even after it's
+8. Stop SFS on all SFS nodes via the "sfs" user
+
+    ------
+    $ cd working-directory-name
+    $ ./clus/priv/clus-sfs.sh -f stop sfs sfs.config
+    ok
+    ok
+    ok
+    sfs@dev1
+    sfs@dev2
+    sfs@dev3
+    ------
+
+
+TIP: The clus-sfs.sh script can be used for starting, mounting,
+umounting, and stopping of a SFS cluster even after it's
 creation.
 
 
 Other Considerations
 ====================
 
-Depending on deployment and usage of HibariFS, additional FUSE,
+Depending on deployment and usage of SFS, additional FUSE,
 Hibari and Linux Kernel related configuration items might be required.
 
 *FUSE*
@@ -338,21 +338,21 @@ follows:
     user_allow_other
     ------
 
-Similiarly, the HibariFS "hibarifs_fuse" application's configuration
+Similiarly, the SFS "sfs_fuse" application's configuration
 for the mount options parameter should be set to "allow_other".  This
 configuration is contained in the example etc/app.config file below.
 
 *HIBARI*
 
 A common configuration item is to specify the Hibari table used by the
-HibariFS client.  The name of the table and it's corresponding
+SFS client.  The name of the table and it's corresponding
 varprefixnum value should be set to "mount_table" and
 "mount_varprefixnum", respectively.  This configuration is contained
 in the example etc/app.config file below.
 
 *Linux Kernel perameters*
 
-On your HibariFS node, in the system's /etc/sysctl.conf file, add the
+On your SFS node, in the system's /etc/sysctl.conf file, add the
 following settings.
 
     ------
@@ -360,15 +360,15 @@ following settings.
     vm.swappiness=0
 
     # This setting makes the kernel to prefer pagecache over
-    # inode/dentry cache. HibariFS node typically has a large amount
+    # inode/dentry cache. SFS node typically has a large amount
     # of RAM and kernel tends to cache too many inodes with the
-    # default value (100). This will lead HibariFS to create more
+    # default value (100). This will lead SFS to create more
     # Erlang processes than it actually needs so it will consume more
     # memory. Having the value 10000 will improve this behavior.
     #
     vm.vfs_cache_pressure=10000
 
-    # Uncomment this if your HibariFS node has enough RAM and you
+    # Uncomment this if your SFS node has enough RAM and you
     # want to be sure that swapping would not happen.
     # 0: (default) allow over-committing memory
     # 2: don't allow over-ommitting memory
@@ -387,9 +387,9 @@ following settings.
 
     ------
     %%
-    %% HibariFS config
+    %% SFS config
     %%
-   {hibarifs_fuse,
+   {sfs_fuse,
     [{spawn_opts, [{fullsweep_after, 5}]}
      , {mount_point, "/mnt/tab1"}
      , {mount_opts, "allow_other"}
@@ -413,7 +413,7 @@ following settings.
 Operating System Specifics - CentOS (5.5)
 =========================================
 
-HibariFS is implemented as a FUSE fileystem.  The following steps are
+SFS is implemented as a FUSE fileystem.  The following steps are
 required to setup FUSE for CentOS.
 
     ------
@@ -424,4 +424,4 @@ required to setup FUSE for CentOS.
     ------
 
 CAUTION: kernel 2.6.18-164 version or newer is required for FUSE and
-HibariFS.
+SFS.

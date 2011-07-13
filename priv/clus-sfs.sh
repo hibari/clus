@@ -70,24 +70,24 @@ usage() {
 Usage: $0 [-f] <command> ...
 
   <command> is one of the following:
-    init <user> <hibarifs.cfg> <hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE>.tgz <hibariuser>
-    start <user> <hibarifs.cfg>
-    bootstrap <user> <hibarifs.cfg> <hibariuser>
-    mount <user> <hibarifs.cfg>
-    umount <user> <hibarifs.cfg>
-    ping <user> <hibarifs.cfg>
-    stop <user> <hibarifs.cfg>
+    init <user> <sfs.cfg> <sfs-X.Y.Z-DIST-ARCH-WORDSIZE>.tgz <hibariuser>
+    start <user> <sfs.cfg>
+    bootstrap <user> <sfs.cfg> <hibariuser>
+    mount <user> <sfs.cfg>
+    umount <user> <sfs.cfg>
+    ping <user> <sfs.cfg>
+    stop <user> <sfs.cfg>
 
   - "-f" is enable force mode.  disable safety checks to prevent
      deleting and/or overwriting an existing installation.
   - <user> is the account on the server(s) where you will be
     installing Hibarifs
-  - <hibarifs.cfg> is Hibarifs's cluster config file
+  - <sfs.cfg> is Hibarifs's cluster config file
   - <hibariuser> is the account on the server(s) where Hibari is
     running
 
 Example usage:
-  $0 init hibarifs hibarifs.cfg hibarifs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz hibari
+  $0 init sfs sfs.cfg sfs-X.Y.Z-DIST-ARCH-WORDSIZE.tgz hibari
 
 Notes:
   - <user> and hosts in the cluster config file must be simple names
@@ -191,10 +191,10 @@ init() {
     for I in `seq 0 $N`; do
         (
             local NODE=${CLIENT_NODES[$I]}
-            local WS_NODE=(`hibarifs_nodes_ws $NODE`)
+            local WS_NODE=(`sfs_nodes_ws $NODE`)
 
             # stop Hibarifs
-            $SSH $NODE_USER@$NODE "(source .bashrc; cd hibarifs &> $NULLFILE; ./bin/hibarifs stop &> $NULLFILE) || true" || \
+            $SSH $NODE_USER@$NODE "(source .bashrc; cd sfs &> $NULLFILE; ./bin/sfs stop &> $NULLFILE) || true" || \
                 die "node $NODE stop failed"
             # kill all Hibarifs beam.smp processes
             $SSH $NODE_USER@$NODE "pkill -9 -u $NODE_USER beam.smp || true" || \
@@ -205,7 +205,7 @@ init() {
                 die "node $NODE scp tarball failed"
 
             # untar Hibarifs package
-            $SSH $NODE_USER@$NODE "rm -rf hibarifs; tar -xzf $TARBALL" || \
+            $SSH $NODE_USER@$NODE "rm -rf sfs; tar -xzf $TARBALL" || \
                 die "node $NODE untar tarball failed"
 
             # configure Hibarifs package
@@ -213,7 +213,7 @@ init() {
 -e 's/-sname .*/-sname $WS_NODE/' \
 -e 's/-name .*/-sname $WS_NODE/' \
 -e 's/-setcookie .*/-setcookie $COOKIE/' \
-hibarifs/etc/vm.args" || \
+sfs/etc/vm.args" || \
                 die "node $NODE vm.args setup failed"
 
             echo $NODE_USER@$NODE
@@ -243,7 +243,7 @@ start() {
             local NODE=${CLIENT_NODES[$I]}
 
             # start Hibarifs package
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs start" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd sfs; ./bin/sfs start" || \
                 die "node $NODE start failed"
 
             echo $NODE_USER@$NODE
@@ -259,7 +259,7 @@ start() {
 # ----------------------------------------------------------------------
 bootstrap() {
     local ADMIN_NODE=${ADMIN_NODES[0]}
-    local WS_NODES=`hibarifs_nodes_ws ${CLIENT_NODES[@]}`
+    local WS_NODES=`sfs_nodes_ws ${CLIENT_NODES[@]}`
 
     # bootstrap Hibarifs package
     $SSH $HIBARI_NODE_USER@$ADMIN_NODE "source .bashrc; cd hibari; ./bin/hibari-admin client-add $WS_NODES" || \
@@ -282,7 +282,7 @@ mount() {
             local NODE=${CLIENT_NODES[$I]}
 
             # mount Hibarifs package
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs-admin mount" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd sfs; ./bin/sfs-admin mount" || \
                 die "node $NODE mount failed"
 
             echo $NODE_USER@$NODE
@@ -306,7 +306,7 @@ umount() {
             local NODE=${CLIENT_NODES[$I]}
 
             # umount Hibarifs package
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs-admin umount" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd sfs; ./bin/sfs-admin umount" || \
                 die "node $NODE umount failed"
 
             echo $NODE_USER@$NODE
@@ -331,7 +331,7 @@ ping() {
 
             # ping Hibarifs package
             echo -n "$NODE_USER@$NODE ... "
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs ping" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd sfs; ./bin/sfs ping" || \
                 die "node $NODE ping failed"
         )
     done
@@ -351,7 +351,7 @@ stop() {
             local NODE=${CLIENT_NODES[$I]}
 
             # stop Hibarifs package
-            $SSH $NODE_USER@$NODE "source .bashrc; cd hibarifs; ./bin/hibarifs stop" || \
+            $SSH $NODE_USER@$NODE "source .bashrc; cd sfs; ./bin/sfs stop" || \
                 die "node $NODE stop failed"
 
             echo $NODE_USER@$NODE
@@ -363,9 +363,9 @@ stop() {
 
 
 # ----------------------------------------------------------------------
-# hibarifs_nodes_cs
+# sfs_nodes_cs
 # ----------------------------------------------------------------------
-hibarifs_nodes_cs() {
+sfs_nodes_cs() {
     local NODES=($@)
     local N0=${#NODES[@]}
 
@@ -375,7 +375,7 @@ hibarifs_nodes_cs() {
 
         for X in `seq 0 $N`; do
             local node=`echo ${NODES[$X]} | sed "s/'//g"`
-            nodes="$nodes,hibarifs@$node"
+            nodes="$nodes,sfs@$node"
         done
         echo `echo $nodes | sed 's/^,//'`
     else
@@ -385,9 +385,9 @@ hibarifs_nodes_cs() {
 
 
 # ----------------------------------------------------------------------
-# hibarifs_nodes_cs_squote
+# sfs_nodes_cs_squote
 # ----------------------------------------------------------------------
-hibarifs_nodes_cs_squote() {
+sfs_nodes_cs_squote() {
     local NODES=($@)
     local N0=${#NODES[@]}
 
@@ -397,7 +397,7 @@ hibarifs_nodes_cs_squote() {
 
         for X in `seq 0 $N`; do
             local node=`echo ${NODES[$X]} | sed "s/'//g"`
-            nodes="$nodes,'hibarifs@$node'"
+            nodes="$nodes,'sfs@$node'"
         done
         echo `echo $nodes | sed 's/^,//'`
     else
@@ -407,9 +407,9 @@ hibarifs_nodes_cs_squote() {
 
 
 # ----------------------------------------------------------------------
-# hibarifs_nodes_ws
+# sfs_nodes_ws
 # ----------------------------------------------------------------------
-hibarifs_nodes_ws() {
+sfs_nodes_ws() {
     local NODES=($@)
     local N0=${#NODES[@]}
 
@@ -419,7 +419,7 @@ hibarifs_nodes_ws() {
 
         for X in `seq 0 $N`; do
             local node=`echo ${NODES[$X]} | sed "s/'//g"`
-            nodes="$nodes hibarifs@$node"
+            nodes="$nodes sfs@$node"
         done
         echo `echo $nodes | sed 's/^ //'`
     else
@@ -429,9 +429,9 @@ hibarifs_nodes_ws() {
 
 
 # ----------------------------------------------------------------------
-# hibarifs_nodes_ws_squote
+# sfs_nodes_ws_squote
 # ----------------------------------------------------------------------
-hibarifs_nodes_ws_squote() {
+sfs_nodes_ws_squote() {
     local NODES=($@)
     local N0=${#NODES[@]}
 
@@ -441,7 +441,7 @@ hibarifs_nodes_ws_squote() {
 
         for X in `seq 0 $N`; do
             local node=`echo ${NODES[$X]} | sed "s/'//g"`
-            nodes="$nodes 'hibarifs@$node'"
+            nodes="$nodes 'sfs@$node'"
         done
         echo `echo $nodes | sed 's/^ //'`
     else
