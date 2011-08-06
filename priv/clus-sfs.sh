@@ -131,7 +131,8 @@ args_sanity() {
         elif [ ! -f "$4" ] ; then
             usage
         else
-            TARBALL=$4
+            SRCTARBALL=$4
+            DSTTARBALL=`basename $4`
             HIBARI_NODE_USER=$5
         fi
     elif [ "$1" = "bootstrap" ] ; then
@@ -201,11 +202,11 @@ init() {
                 die "node $NODE pkill beam.smp failed"
 
             # scp Hibarifs tarball
-            $SCP $TARBALL $NODE_USER@$NODE:$TARBALL || \
+            $SCP $SRCTARBALL $NODE_USER@$NODE:$DSTTARBALL || \
                 die "node $NODE scp tarball failed"
 
             # untar Hibarifs package
-            $SSH $NODE_USER@$NODE "rm -rf sfs; tar -xzf $TARBALL" || \
+            $SSH $NODE_USER@$NODE "rm -rf sfs; tar -xzf $DSTTARBALL" || \
                 die "node $NODE untar tarball failed"
 
             # configure Hibarifs package

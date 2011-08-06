@@ -124,14 +124,14 @@ args_sanity() {
         elif [ ! -f "$4" ] ; then
             usage
         else
-            TARBALL=$4
+            SRCTARBALL=$4
+            DSTTARBALL=`basename $4`
         fi
     fi
 
     CMD=$1
     NODE_USER=$2
     CONFIG_FILE=$3
-    TARBALL=$4
 
     echo $NODE_USER | $PERL -lne 'exit 1 if /[^a-zA-Z0-9._-]/' || \
         die "user '$NODE_USER' invalid"
@@ -236,11 +236,11 @@ init() {
                 die "node $NODE pkill beam.smp failed"
 
             # scp Hibari tarball
-            $SCP $TARBALL $NODE_USER@$NODE:$TARBALL || \
+            $SCP $SRCTARBALL $NODE_USER@$NODE:$DSTTARBALL || \
                 die "node $NODE scp tarball failed"
 
             # untar Hibari package
-            $SSH $NODE_USER@$NODE "rm -rf hibari; tar -xzf $TARBALL" || \
+            $SSH $NODE_USER@$NODE "rm -rf hibari; tar -xzf $DSTTARBALL" || \
                 die "node $NODE untar tarball failed"
 
             # configure Hibari package
