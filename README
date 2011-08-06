@@ -10,13 +10,13 @@ node and on your target Hibari nodes.
 - Set up proper user privileges on the "installer" node and on your target
 Hibari nodes.
 
-For guidance on these tasks, see the "Getting Started" chapter in your Hibari 
+For guidance on these tasks, see the "Getting Started" chapter in your Hibari
 Application Developer's Guide.
 (http://hibari.github.com/hibari-doc/hibari-app-developer-guide.en.html)
 
 This README describes how to configure the Cluster tool, and how to use
 it to install, start, and stop a Hibari cluster. The information in this
-README is also available in the "Getting Started" chapter in your Hibari 
+README is also available in the "Getting Started" chapter in your Hibari
 Application Developer's Guide.
 
 NOTE: The Cluster tool should meet the needs of most users.  However,
@@ -73,7 +73,7 @@ ALL_HEART_XMIT_UDP_PORT="63100"
     bricks per chain there will be two copies of the data stored in
     the chain (one copy on each brick); with three bricks per chain
     there will be three copies, and so on. For an overview of chain
-    replication, see "Chain Replication for High Availability and Strong 
+    replication, see "Chain Replication for High Availability and Strong
     Consistency" in the Hibari Application Developer's Guide. For
     chain replication detail, see the Hibari System Administrator's
     Guide.
@@ -126,7 +126,7 @@ above).
 
 As final configuration steps, on *each Hibari node*:
 
-- Make sure that the /etc/hosts file has entries for all Hibari nodes 
+- Make sure that the /etc/hosts file has entries for all Hibari nodes
 in the cluster. For example:
 
 ------
@@ -135,7 +135,7 @@ in the cluster. For example:
 10.181.165.232  dev3.your-domain.com    dev3
 ------
 
-- In the system's /etc/sysctl.conf file, set vm.swappiness=0. Swappiness 
+- In the system's /etc/sysctl.conf file, set vm.swappiness=0. Swappiness
 is not desirable for an Erlang VM.
 
 ==== Installing Hibari
@@ -191,7 +191,7 @@ You can use the Cluster installer tool to start and stop your
 multi-node Hibari cluster, working from the same node from which you
 managed the installation process. Note that in each of the Hibari
 commands in this section you'll be referencing the name of the
-Cluster tool configuration file that you created during the installation 
+Cluster tool configuration file that you created during the installation
 procedure.
 
 ==== Starting and Bootstrapping the Hibari Cluster
@@ -216,8 +216,8 @@ hibari@dev1 => hibari@dev1 hibari@dev2 hibari@dev3
 ------
 
 The Hibari bootstrap process starts Hibari's Admin Server on the first
-eligible admin node and creates a single table "tab1" serving as Hibari's 
-default table. For information about creating additional tables, see 
+eligible admin node and creates a single table "tab1" serving as Hibari's
+default table. For information about creating additional tables, see
 "Creating New Tables" in the Hibari Application Developer's Guide.
 
 NOTE: If bootstrapping fails due to "another_admin_server_running"
