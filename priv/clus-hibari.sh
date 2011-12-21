@@ -248,7 +248,7 @@ init() {
 -e \"s/-sname .*/-sname $WS_NODE/\" \
 -e \"s/-name .*/-sname $WS_NODE/\" \
 -e \"s/-setcookie .*/-setcookie $COOKIE/\" \
-hibari/etc/vm.args" || \
+hibari/releases/*/vm.args" || \
                 die "node $NODE vm.args setup failed"
 
             $SSH $NODE_USER@$NODE "sed -i.bak \
@@ -264,8 +264,8 @@ hibari/etc/vm.args" || \
 -e \"s/{network_monitor_monitored_nodes,.*}/{network_monitor_monitored_nodes, [$CS_ALL_NODES]}/\" \
 -e \"s/{heartbeat_status_udp_port,.*}/{heartbeat_status_udp_port, $ALL_HEART_UDP_PORT}/\" \
 -e \"s/{heartbeat_status_xmit_udp_port,.*}/{heartbeat_status_xmit_udp_port, $ALL_HEART_XMIT_UDP_PORT}/\" \
-hibari/etc/app.config" || \
-                die "node $NODE app.config setup failed"
+hibari/releases/*/sys.config" || \
+                die "node $NODE sys.config setup failed"
 
             echo $NODE_USER@$NODE
         ) &
