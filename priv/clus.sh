@@ -152,35 +152,35 @@ args_sanity() {
 # ----------------------------------------------------------------------
 init() {
     # check ssh w/ sudo
-    $SSH $NODE_HOST '$SUDO true' || \
-        die "ssh '$NODE_HOST' sudo failed"
+    $SSH $INSTALLER_USER@$NODE_HOST '$SUDO true' || \
+        die "ssh '$INSTALLER_USER@$NODE_HOST' sudo failed"
 
     # force check
     if [ -z $FORCE ] ; then
-        $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" && \
+        $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" && \
             die "remote user '$NODE_USER@$NODE_HOST' exists"
-        $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" && \
+        $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" && \
             die "remote group '$NODE_USER@$NODE_HOST' exists"
     fi
 
     # kill all old user processes
-    $SSH $NODE_HOST "$SUDO pkill -9 -u $NODE_USER &> $NULLFILE || true" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO pkill -9 -u $NODE_USER &> $NULLFILE || true" || \
         die "remote user '$NODE_USER@$NODE_HOST' kill failed"
 
     # delete old user and group
-    $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" && \
-        ($SSH $NODE_HOST "$SUDO $USERDEL -r $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" && \
+        ($SSH $INSTALLER_USER@$NODE_HOST "$SUDO $USERDEL -r $NODE_USER" || \
         die "remote user '$NODE_USER@$NODE_HOST' del failed")
-    $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" && \
-        ($SSH $NODE_HOST "$SUDO $GROUPDEL $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" && \
+        ($SSH $INSTALLER_USER@$NODE_HOST "$SUDO $GROUPDEL $NODE_USER" || \
         die "remote group '$NODE_USER@$NODE_HOST' del failed")
 
     # add new group and user
-    $SSH $NODE_HOST "$SUDO $GROUPADD -r $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO $GROUPADD -r $NODE_USER" || \
         die "remote group '$NODE_USER@$NODE_HOST' add failed"
-    $SSH $NODE_HOST "$SUDO mkdir -p $HOMEBASEDIR" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO mkdir -p $HOMEBASEDIR" || \
         die "remote group '$NODE_USER@$NODE_HOST' mkdir failed"
-    $SSH $NODE_HOST "$SUDO $USERADD -m -r -g $NODE_USER -d $HOMEBASEDIR/$NODE_USER -c '$NODE_USER node' $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO $USERADD -m -r -g $NODE_USER -d $HOMEBASEDIR/$NODE_USER -c '$NODE_USER node' $NODE_USER" || \
         die "remote user '$NODE_USER@$NODE_HOST' add failed"
 
     # copy ssh identity
@@ -188,13 +188,13 @@ init() {
     if [ -z $passwd ] ; then
         die "remote user '$NODE_USER@$NODE_HOST' passwd gen failed"
     fi
-    $SSH $NODE_HOST "echo $passwd | $SUDO passwd --stdin $NODE_USER &> $NULLFILE" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "echo $passwd | $SUDO passwd --stdin $NODE_USER &> $NULLFILE" || \
         die "user '$NODE_USER@$NODE_HOST' passwd failed"
-    $SSH $NODE_HOST "$SUDO $USERMOD -U $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO $USERMOD -U $NODE_USER" || \
         die "remote user '$NODE_USER@$NODE_HOST' mod failed"
     { eval "$EXPECT -c 'spawn $SSHCOPYID $NODE_USER@$NODE_HOST' -c 'expect password:' -c 'send $passwd\n' -c 'expect eof' &> $NULLFILE"; } || \
         die "remote user '$NODE_USER@$NODE_HOST' ssh-copy-id failed"
-    $SSH $NODE_HOST "$SUDO $USERMOD -L $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO $USERMOD -L $NODE_USER" || \
         die "remote user '$NODE_USER@$NODE_HOST' mod failed"
 
     # check ssh
@@ -213,27 +213,27 @@ randpasswd() {
 # ----------------------------------------------------------------------
 delete() {
     # check ssh w/ sudo
-    $SSH $NODE_HOST '$SUDO true' || \
+    $SSH $INSTALLER_USER@$NODE_HOST '$SUDO true' || \
         die "ssh '$NODE_HOST' sudo failed"
 
     # force check
     if [ -z $FORCE ] ; then
-        $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" || \
+        $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" || \
             die "remote user '$NODE_USER@$NODE_HOST' does not exist"
-        $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" || \
+        $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" || \
             die "remote group '$NODE_USER@$NODE_HOST' does not exist"
         die "-f option is required"
     fi
 
     # kill all old user processes
-    $SSH $NODE_HOST "$SUDO pkill -9 -u $NODE_USER &> $NULLFILE || true" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "$SUDO pkill -9 -u $NODE_USER &> $NULLFILE || true" || \
         die "remote user '$NODE_USER@$NODE_HOST' kill failed"
 
     # delete old user and group
-    $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" && \
-        ($SSH $NODE_HOST "$SUDO $USERDEL -r $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $PASSWDFILE" && \
+        ($SSH $INSTALLER_USER@$NODE_HOST "$SUDO $USERDEL -r $NODE_USER" || \
         die "remote user '$NODE_USER@$NODE_HOST' del failed")
-    $SSH $NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" && \
-        ($SSH $NODE_HOST "$SUDO $GROUPDEL $NODE_USER" || \
+    $SSH $INSTALLER_USER@$NODE_HOST "grep $Q '^$NODE_USER:' $GROUPFILE" && \
+        ($SSH $INSTALLER_USER@$NODE_HOST "$SUDO $GROUPDEL $NODE_USER" || \
         die "remote group '$NODE_USER@$NODE_HOST' del failed")
 }
